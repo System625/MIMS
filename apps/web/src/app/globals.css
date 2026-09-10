@@ -1,0 +1,142 @@
+@import 'tailwindcss';
+
+/*
+ * MIMS — Direction B, desktop-first.
+ *
+ * Every value below is lifted from the Claude Design canvas (project MIMS,
+ * files B1Vehicle…B14Privacy). Nothing here is invented: if a colour is not in
+ * the design it is not in this file. The palette is deliberately flat — paper
+ * stock, printer's ink, and one warning orange — so a Naira figure on a cheap
+ * Android screen in sunlight still reads as a sourced number rather than a
+ * decoration.
+ */
+@theme {
+  /* Type. Chivo for prose and headings, Space Mono for anything a user might
+     read aloud to a dealer: part numbers, VINs, prices, codes. */
+  --font-sans: var(--font-chivo), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, Menlo, monospace;
+
+  /* Ink */
+  --color-ink: #0d1512;
+  --color-ink-soft: #2b3a31;
+  --color-muted: #48564d;
+  --color-muted-2: #6e7a72;
+  --color-faint: #8a8574;
+  --color-stone: #7c7768;
+
+  /* Paper */
+  --color-paper: #f2efe6;
+  --color-panel: #f8f6ef;
+  --color-panel-2: #e7e3d6;
+  --color-panel-3: #efebde;
+  --color-panel-4: #f4f1e7;
+
+  /* Rules and edges */
+  --color-rule: #e4dfce;
+  --color-rule-2: #d5cfbd;
+  --color-rule-3: #ddd8c8;
+  --color-edge: #c8c2af;
+  --color-edge-2: #b4ae9b;
+
+  /* The one accent. Used for state, never for delight. */
+  --color-flag: #e8590c;
+  --color-flag-deep: #b0430a;
+  --color-flag-deeper: #8f3606;
+  --color-flag-ink: #1a0b03;
+  --color-flag-soft: #ffe3d2;
+  --color-danger-ink: #7a2e06;
+
+  /* On the dark header band */
+  --color-night-rule: #3a473f;
+  --color-night-muted: #9fafa4;
+  --color-night-muted-2: #b4c2b8;
+}
+
+@layer base {
+  html {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    /* Roadside, one-handed, in sunlight. Never shrink below this. */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Part numbers get read aloud and typed into a dealer's terminal. Selecting
+     one should take a single tap, not a careful drag. */
+  .select-part-number {
+    user-select: all;
+    -webkit-user-select: all;
+    overflow-wrap: anywhere;
+  }
+
+  /* Visible focus everywhere — the design has no soft focus states, so the
+     accent square is the affordance. */
+  :focus-visible {
+    outline: 2px solid var(--color-flag);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@utility hatch {
+  /* "Not in the catalogue" / "no photo yet" fill. Reads as an unfinished area
+     on a workshop drawing rather than as an error. */
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-panel-4) 0 7px,
+    var(--color-panel-2) 7px 14px
+  );
+}
+
+@utility hatch-dense {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-panel-2) 0 6px,
+    var(--color-rule-3) 6px 12px
+  );
+}
+
+@utility hatch-unknown {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-panel-2) 0 5px,
+    var(--color-rule-2) 5px 10px
+  );
+}
+
+/*
+ * Printing. The one-page A4 estimate is a real artefact — it ends up on a
+ * workshop counter — so the browser's own "Save as PDF" is the PDF export until
+ * a server-rendered one exists. Everything that is not the sheet is removed, and
+ * the sheet drops its screen framing.
+ */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  html,
+  body {
+    background: #fff;
+  }
+
+  .print-sheet {
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  @page {
+    size: A4;
+    margin: 14mm;
+  }
+}

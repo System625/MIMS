@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+/*
+ * Admin is deliberately plainer than the consumer app: dense, fast, unbranded.
+ * Tokens stay minimal here on purpose.
+ */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+}

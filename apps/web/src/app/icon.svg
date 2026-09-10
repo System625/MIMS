@@ -1,0 +1,15 @@
+<!--
+  Favicon: mark 2B ("shut line"), the 16px optical variant from the canvas —
+  widened gap, raised lower panel, because the display geometry's 6-unit gap
+  closes up when rasterised this small.
+
+  Given its own ink ground rather than left transparent: a tab strip may be
+  light or dark, and ink-on-transparent disappears against a dark one. Ink is
+  already the brand ground here — it matches the app header and the themeColor
+  in layout.tsx.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" fill="#0D1512" />
+  <path d="M4 4h56v14H36L24 40H4z" fill="#F2EFE6" />
+  <path d="M4 48h18l12-24h26v36H4z" fill="#E8590C" />
+</svg>

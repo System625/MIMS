@@ -1,0 +1,2 @@
+# SPA fallback: every path is handled by React Router, not by Pages.
+/*  /index.html  200

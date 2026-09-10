@@ -1,0 +1,12 @@
+name = "mims-admin"
+compatibility_date = "2026-09-01"
+pages_build_output_dir = "dist"
+
+# Cloudflare Pages project settings (set in the dashboard or `wrangler pages deploy`):
+#
+#   Build command       pnpm install --frozen-lockfile && pnpm turbo run build --filter=@mims/admin...
+#   Build output dir    apps/admin/dist
+#   Root directory      /            (the monorepo root — Turborepo needs the whole tree)
+#
+# VITE_API_URL must be set as a Pages environment variable for both Production
+# and Preview; it is baked into the bundle at build time, not read at runtime.

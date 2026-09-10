@@ -1,0 +1,14 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# Hoisting these keeps the ESLint and Prettier plugin resolution working from
+# each app root, where the configs extend the root config by relative path.
+publicHoistPattern:
+  - "*eslint*"
+  - "*prettier*"
+
+# pnpm blocks postinstall scripts by default. esbuild only unpacks its own
+# platform binary, and Vite cannot run without it.
+allowBuilds:
+  esbuild: true
