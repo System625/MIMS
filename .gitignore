@@ -1,12 +1,28 @@
 node_modules/
 .pnpm-store/
-dist/
-build/
 .next/
-out/
 .turbo/
-coverage/
 *.tsbuildinfo
+
+# Build output, anchored to the repo root and to each workspace package root.
+#
+# Unanchored, a pattern like `coverage/` or `dist/` matches a directory of that
+# name at ANY depth — which silently swallowed apps/web/src/app/coverage/page.tsx,
+# a real route, and shipped a 404 to production. Route segments and modules are
+# named after the domain, so `coverage`, `build` and `out` are all plausible
+# names inside src/. Keep these anchored.
+/dist/
+/build/
+/out/
+/coverage/
+apps/*/dist/
+apps/*/build/
+apps/*/out/
+apps/*/coverage/
+packages/*/dist/
+packages/*/build/
+packages/*/out/
+packages/*/coverage/
 
 .env
 .env.*
