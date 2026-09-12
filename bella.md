@@ -69,6 +69,23 @@ Settled with the founder. Don't reopen these without going back to them.
 That last one is the important one. A customs surprise on arrival would destroy
 exactly the trust the estimator was built to earn.
 
+### Still open, and the founder's to settle
+
+| Question              | What is blocked on it                                                                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Object storage        | No provider chosen, so no listing can hold a photograph. Blocks item 4 doing the one thing a product page must do. The schema is ready; only the provider is missing. |
+| Who photographs stock | Supplier-supplied images or our own. See below — this is a liability question, not a production one.                                                                  |
+| Admin dashboard       | Undesigned. `apps/admin` is untouched scaffold, and item 10 needs it.                                                                                                 |
+
+**On photography.** We are the merchant of record, so the picture on a listing is
+_our_ description of the goods, and under the FCCPA a misdescribed good is a
+refund whatever the policy says. A supplier's own photograph — of a different
+batch, a different trim, a lamp with the other connector — becomes our
+misdescription the moment we publish it. Shooting the stock we hold ourselves is
+the safer answer and a real operational cost, which is worth knowing now rather
+than discovering at item 4. Until it is settled the store draws instead of
+photographing; see §10.
+
 ---
 
 ## 4. What the research says you are up against
@@ -174,12 +191,12 @@ design.
 
 **Coming with the marketplace**
 
-| Platform                             | For                          | What you'll need to know                                                                                           |
-| ------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| Paystack                             | payments                     | See below — it has sharp edges                                                                                     |
-| Object storage                       | part photos, estimate photos | Schema already stores only a key, not the blob. Provider not chosen.                                               |
-| A logistics partner                  | delivery + pickup points     | Not chosen. GIG, Kwik, Sendbox and Jumia Delivery are the field; Jumia alone runs ~494 pickup stations in Nigeria. |
-| A freight forwarder / sourcing agent | China→Nigeria consolidation  | Operational, not code — but it sets the lead times the UI has to state honestly.                                   |
+| Platform                             | For                          | What you'll need to know                                                                                                                                                    |
+| ------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paystack                             | payments                     | See below — it has sharp edges                                                                                                                                              |
+| Object storage                       | part photos, estimate photos | Schema already stores only a key, not the blob. **Provider not chosen, and item 4 needs one** — a product screen with no photograph of the product is not a product screen. |
+| A logistics partner                  | delivery + pickup points     | Not chosen. GIG, Kwik, Sendbox and Jumia Delivery are the field; Jumia alone runs ~494 pickup stations in Nigeria.                                                          |
+| A freight forwarder / sourcing agent | China→Nigeria consolidation  | Operational, not code — but it sets the lead times the UI has to state honestly.                                                                                            |
 
 ### Paystack, concretely
 
@@ -489,6 +506,11 @@ Ten items, worked **two per session**. Order matters — schema before screens.
    **Next session starts here, with item 4.**
 4. **Product detail** — the screen the business lives or dies on. Fitment shown
    as evidence, with "probably fits, can't confirm" as its own designed state.
+   **Needs the two open decisions in §3**: without object storage there is no
+   listing photograph, and the schematics in `part-art.tsx` are a category
+   signpost rather than a picture of the item. Build the photo frame and its
+   "no photograph yet" state regardless — the screen has to be honest when a
+   listing has no image, which will be the common case for a while.
 5. **Cart** — line snapshots, per-line fitment recheck, mixed lead times.
 6. **Checkout and Paystack** — guest checkout, phone as identity, delivery or
    pickup, Nigerian address shape, server-side verify and signed webhooks.
