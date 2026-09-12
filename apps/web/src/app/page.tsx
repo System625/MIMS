@@ -12,6 +12,7 @@ import {
   StatCells,
   Title,
 } from '@/components/ui';
+import { CarPlanArt, PartArt, PartsClusterArt } from '@/components/part-art';
 import { VehicleContext } from '@/components/vehicle-context';
 import { COMING_SOON, HOW_BUYING_WORKS, STORE_CATEGORIES } from '@/mock/store';
 
@@ -60,6 +61,9 @@ export default function StoreHomePage() {
                 <PanelBar weight="heavy" right="Part name or number">
                   If you know the part
                 </PanelBar>
+                <div className="border-rule-2 bg-panel-4 border-b-[1.5px] p-[13px]">
+                  <PartsClusterArt />
+                </div>
                 <div className="flex flex-1 flex-col px-[15px] py-[16px]">
                   <Title className="text-[19px]">Search the catalogue</Title>
                   <p className="text-ink-soft mt-[9px] text-[13.5px] leading-[1.55]">
@@ -81,6 +85,42 @@ export default function StoreHomePage() {
                 <PanelBar weight="heavy" right="Free · No sign-in">
                   If you only know the damage
                 </PanelBar>
+                {/* The same plan the user meets on screen 2, two panels marked.
+                    It explains the estimator faster than the paragraph below it,
+                    and it balances the parts diagram in the panel opposite. */}
+                <div className="border-rule-2 bg-panel-4 flex flex-wrap items-center gap-[16px] border-b-[1.5px] p-[13px]">
+                  <div className="h-[104px] flex-none">
+                    <CarPlanArt />
+                  </div>
+                  <dl className="min-w-0 flex-1">
+                    {[
+                      { swatch: 'bg-flag border-ink', term: 'Damaged', note: 'You tap it.' },
+                      {
+                        swatch: 'bg-panel-3 border-ink border-dashed',
+                        term: 'No outer panel',
+                        note: 'Radiator, behind the grille.',
+                      },
+                      {
+                        swatch: 'bg-panel-2 border-edge',
+                        term: 'Not carried',
+                        note: 'Cabin and interior.',
+                      },
+                    ].map((row) => (
+                      <div key={row.term} className="mb-[9px] flex items-start gap-[8px] last:mb-0">
+                        <span
+                          aria-hidden
+                          className={`mt-[2px] h-[12px] w-[12px] flex-none border-[1.5px] ${row.swatch}`}
+                        />
+                        <div className="min-w-0">
+                          <dt className="text-[12.5px] font-bold leading-[1.2]">{row.term}</dt>
+                          <dd className="text-muted m-0 text-[11.5px] leading-[1.35]">
+                            {row.note}
+                          </dd>
+                        </div>
+                      </div>
+                    ))}
+                  </dl>
+                </div>
                 <div className="flex flex-1 flex-col px-[15px] py-[16px]">
                   <Title className="text-[19px]">Get a parts estimate</Title>
                   <p className="text-ink-soft mt-[9px] text-[13.5px] leading-[1.55]">
@@ -114,17 +154,22 @@ export default function StoreHomePage() {
                 <li key={category.code} className="min-w-0">
                   <Link
                     href={`/parts?category=${category.code}`}
-                    className="border-ink bg-panel hover:bg-panel-4 flex h-full flex-col border-[1.5px] p-[14px]"
+                    className="border-ink bg-panel hover:bg-panel-4 group flex h-full flex-col border-[1.5px]"
                   >
-                    <Title as="div" className="text-[15px]">
-                      {category.name}
-                    </Title>
-                    <p className="text-muted mt-[7px] text-[12.5px] leading-[1.5]">
-                      {category.blurb}
-                    </p>
-                    <span className="text-flag-deep mt-[12px] font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em]">
-                      Browse →
-                    </span>
+                    <div className="border-ink border-b-[1.5px] bg-white px-[12px] py-[10px]">
+                      <PartArt kind={category.art} className="h-[92px]" />
+                    </div>
+                    <div className="flex flex-1 flex-col p-[14px]">
+                      <Title as="div" className="text-[15px]">
+                        {category.name}
+                      </Title>
+                      <p className="text-muted mt-[7px] text-[12.5px] leading-[1.5]">
+                        {category.blurb}
+                      </p>
+                      <span className="text-flag-deep mt-auto pt-[12px] font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em]">
+                        Browse →
+                      </span>
+                    </div>
                   </Link>
                 </li>
               ))}

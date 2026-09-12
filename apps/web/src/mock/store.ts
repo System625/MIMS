@@ -1,3 +1,5 @@
+import type { PartArtKind } from '@/components/part-art';
+
 /**
  * The storefront's own copy and taxonomy.
  *
@@ -15,31 +17,43 @@ export interface StoreCategoryCard {
   name: string;
   /** What a shopper would call the things inside it. */
   blurb: string;
+  /**
+   * Which schematic to draw. Not a photograph, and deliberately so — see the
+   * note at the top of `components/part-art.tsx`. A category signpost may say
+   * "this is the kind of thing"; only a real listing photograph may say "this is
+   * the item", and we hold none yet.
+   */
+  art: PartArtKind;
 }
 
 export const STORE_CATEGORIES: readonly StoreCategoryCard[] = [
   {
     code: 'bumper',
+    art: 'bumper',
     name: 'Bumpers',
     blurb: 'Front and rear covers, reinforcements, brackets and clips.',
   },
   {
     code: 'lighting',
+    art: 'lighting',
     name: 'Lighting',
     blurb: 'Headlight and tail-light assemblies, per side. Halogen and LED differ.',
   },
   {
     code: 'body_panel',
+    art: 'body_panel',
     name: 'Body panels',
     blurb: 'Hoods, fenders, doors and rear panels. Primed, not painted.',
   },
   {
     code: 'grille',
+    art: 'grille',
     name: 'Grilles',
     blurb: 'Upper and lower grilles, mouldings and the trim around them.',
   },
   {
     code: 'cooling',
+    art: 'cooling',
     name: 'Cooling',
     blurb: 'Radiators, condensers, fans and the packs they sit in.',
   },

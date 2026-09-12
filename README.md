@@ -95,7 +95,7 @@ as illustrations — `/states` just shows them together. A bad VIN on
 Component inventory: `src/components/ui.tsx` (buttons, panels, inputs, toggles,
 segmented controls), `chrome.tsx` (header, shell, page heading, footer),
 `zone-selector.tsx`, `parts-table.tsx`, `part-number.tsx`, `states.tsx`,
-`mark.tsx`, `vehicle-context.tsx`.
+`mark.tsx`, `vehicle-context.tsx`, `part-art.tsx`.
 
 The marketplace screens are **not** transcriptions. The estimator was built from
 the design canvas and that canvas is its specification; the store is built from
@@ -107,6 +107,13 @@ a delivery selector — gets designed _inside_ that system.
 `vehicle-context.tsx` is the store's spine: the car you are shopping for, shown
 on every marketplace page and changeable in place. It shares one localStorage
 store with the estimator, so a car set in either half is known to both.
+
+`part-art.tsx` draws the parts — category schematics and the plan-view car — in
+the system's own two stroke weights. They are **drawings and not photographs on
+purpose**: a photograph of a part is a claim about that part, we hold none, and a
+stock image of somebody else's product would be the visual form of the invented
+part number the AI boundary forbids. Real photography belongs on listings, of
+listings, and waits on an object-storage provider.
 
 ### The logo
 

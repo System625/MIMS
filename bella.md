@@ -391,6 +391,16 @@ The same rule holds in the mock data. Where the design canvas does not specify a
 part number for a zone, the row is present but **unpriced with a null part
 number**, not filled in with something plausible.
 
+**The same rule applies to pictures.** A photograph of a part is a claim about
+that part — a shopper reads the lamp in the image as the lamp in the box, down to
+the connector. So no stock photography, ever: a stock image of somebody else's
+product is the visual form of an invented part number. The store draws instead
+(`apps/web/src/components/part-art.tsx`), because a schematic can honestly say
+"this is the kind of thing" without claiming "this is the item you will receive".
+Real photographs are allowed, and wanted, once they are photographs **of the
+listing being sold** — that is what `listing_photos` is for, and it needs an
+object-storage provider first.
+
 **Everything else:**
 
 - **No business logic in route handlers or components.** The API has a service
@@ -501,7 +511,8 @@ copy. Don't improve on it.
 The **marketplace is different**: it is being built from the existing design
 patterns rather than from a canvas, by decision. Extend the system in
 `globals.css` and the component inventory (`ui.tsx`, `chrome.tsx`,
-`parts-table.tsx`, `zone-selector.tsx`, `states.tsx`, `mark.tsx`). If the
+`parts-table.tsx`, `zone-selector.tsx`, `states.tsx`, `mark.tsx`,
+`vehicle-context.tsx`, `part-art.tsx`). If the
 marketplace genuinely needs a component the estimator never had — a price that is
 a price rather than an estimate, a quantity stepper, a delivery selector — design
 it _in_ that system.
