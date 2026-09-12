@@ -89,17 +89,33 @@ export function ListingDetailScreen({ slug }: { slug: string }) {
 
           {/*
            * Said in words under the frame, not left for the reader to work out.
-           * A drawing that quietly stood in for a photograph would be the same
-           * claim a stock image makes; a drawing that says it is a drawing is a
-           * category signpost, which is true.
+           * Three cases and three sentences, because the difference between
+           * them is exactly what a buyer needs and would otherwise guess at.
+           *
+           * The middle case is the one that matters. We are merchant of record,
+           * so the picture is our description of the goods: an unlabelled stock
+           * photograph is a misdescription the moment the customer's part
+           * arrives with a different connector, and under the FCCPA that is a
+           * refund whatever our policy says. Labelling it does not make the
+           * shortcut free, but it is the difference between a presentation
+           * stopgap and a claim we cannot stand behind.
            */}
           {listing.photos.length === 0 ? (
             <Note tone="dashed" className="mt-[10px]">
               <strong className="font-bold">This is a drawing, not the item.</strong> We hold no
-              photograph of this listing yet, so the picture above is our schematic of the kind of
-              part it is. We will not put a stock photograph of somebody else&rsquo;s product here —
-              you would read it as the part in the box, and it would not be.
+              photograph of this part yet, so the picture above is our schematic of the kind of part
+              it is.
               {imageDeliveryConfigured() ? null : ' Listing photography is being set up now.'}
+            </Note>
+          ) : listing.photos[0]?.illustrative ? (
+            <Note tone="rule" className="mt-[10px]">
+              <strong className="font-bold">
+                This photograph shows the kind of part, not the one you will receive.
+              </strong>{' '}
+              It is a stock image we are using while we photograph our own stock. Do not judge the
+              colour, the finish, the connector or the badging from it — judge fitment from the
+              verdict and the part number, which are about your car and are the things we stand
+              behind. If anything we ship is not what we described, that is a refund.
             </Note>
           ) : null}
 

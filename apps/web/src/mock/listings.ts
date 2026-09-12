@@ -4,6 +4,7 @@ import type {
   ListingDetail,
   ListingFacets,
   ListingFitment,
+  ListingPhoto,
   ListingSummary,
   ListingSort,
   PartCondition,
@@ -271,6 +272,86 @@ const CATALOGUE: readonly CataloguePart[] = [
   },
 ];
 
+/* ----------------------------------------------------------------- photos -- */
+
+/**
+ * A stored photograph, plus the one thing the contract does not carry: whether
+ * it is a picture of THIS ITEM or a picture of the kind of thing.
+ */
+export interface StorePhoto extends ListingPhoto {
+  /**
+   * True while the image is stock photography of the part TYPE rather than of
+   * the item we would ship.
+   *
+   * It is not a cosmetic flag. It drives the framing (an illustrative plate is
+   * cropped to fill, a real product shot is contained so nothing is cut off the
+   * part) and, more importantly, it drives the labelling: an illustrative image
+   * says so on the page, every time it appears. We are merchant of record, so
+   * the picture is legally our description of the goods — a stock lamp with a
+   * different connector is a refund we owe under the FCCPA whatever our policy
+   * says. Saying plainly that the picture is not the item is what keeps this a
+   * presentation shortcut instead of a misdescription.
+   *
+   * Delete the flag when the photograph is genuinely of the listing. Do not
+   * delete it to tidy the page up.
+   */
+  illustrative: boolean;
+}
+
+/**
+ * LISTING PHOTOGRAPHS, keyed by part slug.
+ *
+ * Stock imagery, added on the founder's explicit call (2026-09-12) as a stopgap
+ * until we photograph our own held stock. `apps/web/public/listings/SOURCES.md`
+ * records where each one came from and under what licence.
+ *
+ * This is the one place an image gets attached, deliberately: adding one should
+ * be a single line of data, not a code change. The value's `storageKey` is a
+ * filename under `apps/web/public/listings/` while no CDN is configured, or an
+ * object key in the R2 bucket once `NEXT_PUBLIC_IMAGE_BASE_URL` is set —
+ * `lib/images.ts` resolves it either way, so these entries survive the move.
+ *
+ * ALT TEXT IS WRITTEN BY A PERSON, NEVER GENERATED, and while `illustrative` is
+ * set it describes what the photograph actually shows — a yellow car, a
+ * bodyshop — rather than describing the part on sale. A screen-reader user is
+ * owed the same information a sighted buyer gets from looking at it, which here
+ * includes noticing that the picture is not the product.
+ *
+ * The five catalogue parts we hold no priced offer for deliberately get NO
+ * image. They are gaps, not offers, and a picture would make them look like
+ * something you can buy.
+ */
+const PART_PHOTOS: Readonly<Record<string, StorePhoto>> = {
+  'front-bumper-cover': {
+    storageKey: 'front-bumper-cover.jpg',
+    altText:
+      'Stock photograph: the front corner of a modern white hatchback, showing where a bumper cover sits below the headlamp. Not the part on sale.',
+    isPrimary: true,
+    illustrative: true,
+  },
+  'hood-bonnet-panel': {
+    storageKey: 'hood-bonnet-panel.jpg',
+    altText:
+      'Stock photograph: a car body panel being spray-painted in a bodyshop. Not the part on sale.',
+    isPrimary: true,
+    illustrative: true,
+  },
+  'headlight-assembly-left': {
+    storageKey: 'headlight-assembly-left.jpg',
+    altText:
+      'Stock photograph: a close-up of a modern projector headlight fitted to a white car. Not the part on sale.',
+    isPrimary: true,
+    illustrative: true,
+  },
+  'radiator-1-8l': {
+    storageKey: 'radiator-1-8l.jpg',
+    altText:
+      'Stock photograph: a close-up of a radiator core and cooling pack. Not the part on sale.',
+    isPrimary: true,
+    illustrative: true,
+  },
+};
+
 /* --------------------------------------------------------------- listings -- */
 
 /**
@@ -278,10 +359,11 @@ const CATALOGUE: readonly CataloguePart[] = [
  * genuinely presentational fields — the URL slug and which schematic to draw —
  * exactly as `EstimateItemView` extends `EstimateItem` with its ordinal.
  */
-export interface ListingSummaryView extends Omit<ListingSummary, 'fitment'> {
+export interface ListingSummaryView extends Omit<ListingSummary, 'fitment' | 'photo'> {
   slug: string;
   art: PartArtKind;
   fitment: FitmentVerdict | null;
+  photo: StorePhoto | null;
 }
 
 export interface ListingAlternativeView {
@@ -294,7 +376,12 @@ export interface ListingAlternativeView {
   stockModel: StockModel;
 }
 
-export interface ListingDetailView extends Omit<ListingDetail, 'fitment' | 'alternatives'> {
+export interface ListingDetailView extends Omit<
+  ListingDetail,
+  'fitment' | 'alternatives' | 'photo' | 'photos'
+> {
+  photo: StorePhoto | null;
+  photos: StorePhoto[];
   slug: string;
   art: PartArtKind;
   fitment: FitmentVerdict | null;
@@ -385,10 +472,10 @@ const LISTINGS: readonly BuiltListing[] = CATALOGUE.flatMap((part, partIndex) =>
         priceValidUntil: PRICE_VALID_UNTIL,
         leadTime: supplier.leadTime,
         quantityAvailable: supplier.quantityAvailable,
-        /* We hold no listing photography yet. R2 and the delivery pipeline are
-           wired (see `lib/images.ts`); what is missing is photographs OF THESE
-           ITEMS, and until they exist every frame takes its drawn state. */
-        photo: null,
+        /* Null for every listing today, because we hold no photography of these
+           items. The frame renders its drawn state for exactly as long as that
+           stays true — see `PART_PHOTOS` above for how one gets attached. */
+        photo: PART_PHOTOS[part.slug] ?? null,
       },
     };
   });
@@ -641,7 +728,7 @@ export function listingBySlug(
         : null,
     manufacturerName: null,
     isGenuineBrand: condition === 'new_oem',
-    photos: [],
+    photos: PART_PHOTOS[part.slug] ? [PART_PHOTOS[part.slug]!] : [],
     fitments: fitmentRows(part),
     /* We hold no cross-reference table yet. An empty list is the honest answer
        and the screen is built to say so. */

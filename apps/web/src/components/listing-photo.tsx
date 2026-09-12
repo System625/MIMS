@@ -1,5 +1,5 @@
 import { listingImageSrcSet, listingImageUrl } from '@/lib/images';
-import type { ListingPhoto as ListingPhotoRecord } from '@mims/contracts';
+import type { StorePhoto } from '@/mock/listings';
 import { PartArt, type PartArtKind } from './part-art';
 import { cx, Kicker } from './ui';
 
@@ -81,7 +81,7 @@ export function ListingPhotoFrame({
   /** Names the drawing as a drawing. On the product screen, not in a list. */
   stamp = false,
 }: {
-  photo: ListingPhotoRecord | null;
+  photo: StorePhoto | null;
   art: PartArtKind;
   maxWidth: number;
   sizes: string;
@@ -89,8 +89,17 @@ export function ListingPhotoFrame({
   emptyFill?: 'white' | 'hatch';
   stamp?: boolean;
 }) {
-  const src = listingImageUrl(photo?.storageKey, { width: maxWidth, fit: 'contain' });
-  const srcSet = listingImageSrcSet(photo?.storageKey, maxWidth, { fit: 'contain' });
+  /*
+   * An illustrative photograph is cropped to fill; a real product shot is
+   * contained. That is not a stylistic preference — on a photograph OF the
+   * item, cropping can cut off the bracket or the connector, which is the exact
+   * detail a buyer is checking. On a stock photograph of a yellow car there is
+   * no such detail to protect, and filling the plate is what stops a set of
+   * mismatched sources looking like a scrapbook.
+   */
+  const fit = photo?.illustrative ? 'cover' : 'contain';
+  const src = listingImageUrl(photo?.storageKey, { width: maxWidth, fit });
+  const srcSet = listingImageSrcSet(photo?.storageKey, maxWidth, { fit });
 
   if (src === null) {
     return (
@@ -142,8 +151,28 @@ export function ListingPhotoFrame({
         alt={photo?.altText ?? ''}
         loading="lazy"
         decoding="async"
-        className="h-full w-full object-contain"
+        className={cx('h-full w-full', fit === 'cover' ? 'object-cover' : 'object-contain')}
       />
+
+      {/*
+       * AN ILLUSTRATIVE PHOTOGRAPH IS MARKED EVERYWHERE IT APPEARS, including in
+       * a list, and that is the one place the drawings are treated differently.
+       * A flat line drawing announces itself as a drawing; a photograph of a
+       * yellow car does not announce that it is not the Corolla part you are
+       * buying. Search rows are where people skim hardest, so the marker earns
+       * its space there more than anywhere else.
+       */}
+      {photo?.illustrative ? (
+        <Kicker
+          as="span"
+          className={cx(
+            'border-ink bg-paper/95 text-ink-soft absolute bottom-0 left-0 max-w-full truncate border-r-[1.5px] border-t-[1.5px] tracking-[0.09em]',
+            stamp ? 'px-[6px] py-[4px]' : 'px-[4px] py-[3px] text-[9.5px]',
+          )}
+        >
+          {stamp ? 'Illustrative — not the item' : 'Illustrative'}
+        </Kicker>
+      ) : null}
     </div>
   );
 }

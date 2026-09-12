@@ -127,6 +127,14 @@ stock image of somebody else's product would be the visual form of the invented
 part number the AI boundary forbids. Real photography belongs on listings, of
 listings.
 
+**That rule was relaxed once, on purpose — see `bella.md` §10.** Four labelled
+stock images are live as a stopgap, sourced in
+`apps/web/public/listings/SOURCES.md`. The `illustrative` flag on a `StorePhoto`
+is what makes it defensible: it marks the image on every search row and puts a
+plain caveat on the product screen saying the photograph shows the kind of part
+rather than the one you will receive. Drop the flag when a photograph is
+genuinely of the listing; do not drop it to tidy the page up.
+
 `listing-photo.tsx` is the frame those photographs will land in, and it renders
 the drawn state until they do. The two states are given deliberately different
 proportions — a photographic 4:3 plate, a wide shallow 16:7 diagram — so they
@@ -165,11 +173,11 @@ rasterised export the App Router picks up by filename.
 - **API wiring.** `src/lib/api-client.ts` is the typed client and is ready; the
   screens read from `src/mock` instead. Each mock module names the query that
   replaces it. Nothing in the commerce schema has a route in front of it yet.
-- **Listing photographs.** The storage and delivery are built and configured by
-  one env var (`NEXT_PUBLIC_IMAGE_BASE_URL`); what is missing is photographs of
-  our own stock, and the founder's call on whether we shoot them or publish a
-  supplier's. Until then every frame renders its drawn state, which is honest
-  rather than a placeholder.
+- **Photographs of our own stock.** Labelled stock imagery is standing in. The
+  storage and delivery are built and configured by one env var
+  (`NEXT_PUBLIC_IMAGE_BASE_URL`); what is missing is pictures of the actual goods
+  and the founder's call on whether we shoot them or publish a supplier's. Any
+  listing without an entry in `PART_PHOTOS` still renders its drawn state.
 
 ## Root scripts
 

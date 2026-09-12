@@ -72,12 +72,15 @@ exactly the trust the estimator was built to earn.
 
 ### Still open, and the founder's to settle
 
-| Question              | What is blocked on it                                                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Who photographs stock | Supplier-supplied images or our own. See below — this is a liability question, not a production one, and it is now the ONLY thing standing between a listing and a photograph. |
-| Admin dashboard       | Undesigned. `apps/admin` is untouched scaffold, and item 10 needs it.                                                                                                          |
+| Question              | What is blocked on it                                                                                                                                                                                             |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Who photographs stock | Supplier-supplied images or our own. Still open. Labelled stock imagery is live as a stopgap (§10), which buys time but does not answer the question — a stock photo is nobody's description of the actual goods. |
+| Admin dashboard       | Undesigned. `apps/admin` is untouched scaffold, and item 10 needs it.                                                                                                                                             |
 
-**On photography.** We are the merchant of record, so the picture on a listing is
+**On photography — and note this is now partly overtaken by events; see §10.**
+Stock imagery went live on 2026-09-12 on the founder's explicit call, labelled as
+illustrative. The liability reasoning below is unchanged and is exactly why the
+labelling is not optional. We are the merchant of record, so the picture on a listing is
 _our_ description of the goods, and under the FCCPA a misdescribed good is a
 refund whatever the policy says. A supplier's own photograph — of a different
 batch, a different trim, a lamp with the other connector — becomes our
@@ -417,20 +420,44 @@ The same rule holds in the mock data. Where the design canvas does not specify a
 part number for a zone, the row is present but **unpriced with a null part
 number**, not filled in with something plausible.
 
-**The same rule applies to pictures.** A photograph of a part is a claim about
-that part — a shopper reads the lamp in the image as the lamp in the box, down to
-the connector. So no stock photography, ever: a stock image of somebody else's
-product is the visual form of an invented part number. The store draws instead
-(`apps/web/src/components/part-art.tsx`), because a schematic can honestly say
-"this is the kind of thing" without claiming "this is the item you will receive".
-Real photographs are allowed, and wanted, once they are photographs **of the
-listing being sold** — that is what `listing_photos` is for. The storage and
-delivery for it now exist (R2 + Cloudflare Images, §7); what does not exist yet
-is the photographs themselves and the decision about who takes them, so every
-frame in the store currently renders its drawn state. `ListingPhotoFrame` gives
-the two states deliberately different proportions so they can never be mistaken
-for one another, and the product screen says in words that the picture is a
-drawing.
+**Pictures are governed by the same idea, but the rule has been relaxed once,
+deliberately, and the relaxation is written down here rather than quietly
+absorbed.** A photograph of a part is a claim about that part — a shopper reads
+the lamp in the image as the lamp in the box, down to the connector — and we are
+merchant of record, so that claim is legally our description of the goods.
+
+This file used to say "no stock photography, ever". **On 2026-09-12 the founder
+overruled that**, with the trade-off put to them in writing first: free stock
+libraries carry no isolated replacement-part photography at all (checked, not
+assumed — what they carry is lamps mounted on other people's cars), the store
+looked empty without imagery, and shipping something was judged worth more than
+holding the line until we can photograph our own stock. Four stock images are
+now live, listed in `apps/web/public/listings/SOURCES.md`.
+
+**What the relaxation did not include, and what still holds:**
+
+- **Every illustrative image labels itself, everywhere it appears.** The
+  `illustrative` flag on a `StorePhoto` drives a corner marker on search rows and
+  a plain-English caveat on the product screen: this shows the kind of part, not
+  the one you will receive; judge fitment from the verdict and the number. That
+  labelling is the entire difference between a presentation stopgap and a
+  misdescription, so it is not a detail to tidy away when the page feels busy.
+- **No manufacturer badge or wordmark** on any listing that is not that
+  manufacturer's own part. A Toyota roundel on an aftermarket bumper is a
+  trademark problem on top of a consumer-law one, and it is the version of this
+  shortcut with no defence at all.
+- **The gaps stay unillustrated.** Catalogue parts with no priced offer get no
+  photograph — they are gaps, not offers, and a picture makes them look buyable.
+- **This is a stopgap with an exit.** Drop the `illustrative` flag the day a
+  photograph is genuinely of the listing; the frame stops cropping and the
+  caveats disappear, because they will no longer be true.
+
+The drawings have not gone anywhere and are still the honest default
+(`apps/web/src/components/part-art.tsx`): a schematic says "this is the kind of
+thing" without ever claiming "this is the item you will receive", and it is what
+every listing without a photograph still renders. `ListingPhotoFrame` gives
+drawings and photographs deliberately different proportions so the two can never
+be mistaken for one another.
 
 **Everything else:**
 

@@ -93,14 +93,32 @@ function serialiseOptions(transform: ImageTransform): string {
 }
 
 /**
- * One transformed URL, or null when we cannot honestly produce one — either
- * because no storage base is configured or because the key is not a key.
+ * Where a key resolves when no CDN is configured: `apps/web/public/listings/`,
+ * served by Next like any other static asset. That gives a second, zero-setup
+ * source for images — drop the files in the folder, name them in the catalogue,
+ * done — without a bucket, a domain or an env var.
+ *
+ * It is a real path rather than a stopgap. Whichever way the photography
+ * question is answered, the first images will arrive as a handful of files
+ * somebody wants to see on the site today, and making that wait on Cloudflare
+ * DNS would be the wrong obstacle to put in the way.
+ */
+const LOCAL_PREFIX = '/listings';
+
+/**
+ * One URL for a stored image, or null when we cannot honestly produce one.
+ *
+ * The null case is ONLY a missing or malformed key — never a missing CDN.
+ * Nothing here invents an image: a listing shows a photograph if, and only if,
+ * a photo record was put on it, so an unconfigured deployment renders drawings
+ * rather than broken frames.
  */
 export function listingImageUrl(
   storageKey: string | null | undefined,
   transform: ImageTransform,
 ): string | null {
-  if (!IMAGE_BASE || !storageKey || !isSafeKey(storageKey)) return null;
+  if (!storageKey || !isSafeKey(storageKey)) return null;
+  if (!IMAGE_BASE) return `${LOCAL_PREFIX}/${encodeKey(storageKey)}`;
   return `${IMAGE_BASE}/cdn-cgi/image/${serialiseOptions(transform)}/${encodeKey(storageKey)}`;
 }
 
@@ -115,6 +133,8 @@ export function listingImageSrcSet(
   maxWidth: number,
   transform: Omit<ImageTransform, 'width'> = {},
 ): string | null {
+  // No CDN means no variants to offer — there is one file and the browser gets
+  // it. Emitting a srcset of identical URLs would only mislead the picker.
   if (!IMAGE_BASE || !storageKey || !isSafeKey(storageKey)) return null;
 
   const widths = WIDTH_LADDER.filter((width) => width <= maxWidth * 2);
@@ -125,7 +145,11 @@ export function listingImageSrcSet(
     .join(', ');
 }
 
-/** Whether photography is wired up at all. Drives copy, never a broken frame. */
+/**
+ * Whether EDGE DELIVERY is configured — not whether photography exists. False
+ * means images fall back to local files at their original size, which is fine
+ * for a handful and wrong for a catalogue. Drives copy, never a broken frame.
+ */
 export function imageDeliveryConfigured(): boolean {
   return IMAGE_BASE.length > 0;
 }
