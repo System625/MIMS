@@ -71,7 +71,9 @@ mobile build). Every route below is a transcription of one of its files.
 | Route                            | Design file    | What it is                                        |
 | -------------------------------- | -------------- | ------------------------------------------------- |
 | `/`                              | —              | The marketplace home. Not from the canvas.        |
-| `/parts`                         | —              | Browse. A holding page until build-plan item 3.   |
+| `/parts`                         | —              | Search and browse. Not from the canvas.           |
+| `/parts/[slug]`                  | —              | Product detail. Not from the canvas.              |
+| `/cart`                          | —              | A holding page until build-plan item 5.           |
 | `/estimate/new`                  | `B1Vehicle`    | Screen 1 — VIN or manual cascade, as siblings     |
 | `/damage`                        | `B2Damage`     | Screen 2 — plan-view diagram **and** checklist    |
 | `/estimate`                      | `B3Results`    | Screen 3 — parts table, prices, WhatsApp exit     |
@@ -93,9 +95,19 @@ as illustrations — `/states` just shows them together. A bad VIN on
 02; `/estimate` passes through the loading state on the way to results.
 
 Component inventory: `src/components/ui.tsx` (buttons, panels, inputs, toggles,
-segmented controls), `chrome.tsx` (header, shell, page heading, footer),
-`zone-selector.tsx`, `parts-table.tsx`, `part-number.tsx`, `states.tsx`,
-`mark.tsx`, `vehicle-context.tsx`, `part-art.tsx`.
+segmented controls, quantity stepper), `chrome.tsx` (header, shell, page
+heading, footer), `zone-selector.tsx`, `parts-table.tsx`, `part-number.tsx`,
+`states.tsx`, `mark.tsx`, `vehicle-context.tsx`, `part-art.tsx`. The store adds
+`browse.tsx` (search, facets, results), `listing-row.tsx`, `listing-detail.tsx`,
+`listing-photo.tsx` and `fitment.tsx`.
+
+`fitment.tsx` is worth reading before anything else in the store. It holds the
+four states — confirmed, probable, unknown, and "no car set", which is a fourth
+rather than a synonym for the third — and every screen that mentions fitment
+says it through these components so the answer cannot drift between them. There
+is no green tick anywhere: `probable` takes the caution treatment, because
+around half of all parts returns are fitment errors and a tick invites exactly
+the skim this product cannot survive.
 
 The marketplace screens are **not** transcriptions. The estimator was built from
 the design canvas and that canvas is its specification; the store is built from
@@ -113,7 +125,16 @@ the system's own two stroke weights. They are **drawings and not photographs on
 purpose**: a photograph of a part is a claim about that part, we hold none, and a
 stock image of somebody else's product would be the visual form of the invented
 part number the AI boundary forbids. Real photography belongs on listings, of
-listings, and waits on an object-storage provider.
+listings.
+
+`listing-photo.tsx` is the frame those photographs will land in, and it renders
+the drawn state until they do. The two states are given deliberately different
+proportions — a photographic 4:3 plate, a wide shallow 16:7 diagram — so they
+can never be mistaken for one another, and the product screen states in words
+that the picture is a drawing. Bytes go in **Cloudflare R2**; delivery is
+**Cloudflare Images** transformations at the edge (`lib/images.ts`), which is
+why there is no `next/image` here — the CDN has already resized it, and doing it
+again on the Railway container would pay twice for one result.
 
 ### The logo
 
@@ -134,18 +155,21 @@ rasterised export the App Router picks up by filename.
 
 ## What is not built
 
-- **The rest of the store.** Search and browse, product detail, cart, checkout
-  and Paystack, order tracking, and the estimator's "add these to a cart" exit.
-  They are items 3 to 9 of the build plan in `bella.md` §12, worked two per
-  session and in that order. `/parts` is a holding page so the home page's links
-  are real; it is the only inert route in the store.
+- **The rest of the store.** Cart, checkout and Paystack, order tracking, and
+  the estimator's "add these to a cart" exit. They are items 5 to 9 of the build
+  plan in `bella.md` §12, worked two per session and in that order. `/cart` is a
+  holding page so the product screen's buy button is real; it is the only inert
+  route in the store.
 - **Admin dashboard.** Not designed, and that is the founder's call to make.
   `apps/admin` is untouched scaffold.
 - **API wiring.** `src/lib/api-client.ts` is the typed client and is ready; the
   screens read from `src/mock` instead. Each mock module names the query that
   replaces it. Nothing in the commerce schema has a route in front of it yet.
-- **Object storage.** `listing_photos` stores a key, not a blob, and no provider
-  is chosen — so listings have no photographs anywhere yet.
+- **Listing photographs.** The storage and delivery are built and configured by
+  one env var (`NEXT_PUBLIC_IMAGE_BASE_URL`); what is missing is photographs of
+  our own stock, and the founder's call on whether we shoot them or publish a
+  supplier's. Until then every frame renders its drawn state, which is honest
+  rather than a placeholder.
 
 ## Root scripts
 

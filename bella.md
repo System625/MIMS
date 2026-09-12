@@ -56,26 +56,26 @@ and it is not what we are building.
 
 Settled with the founder. Don't reopen these without going back to them.
 
-| Question          | Decision                                                                                                                           |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Marketplace model | Middleman / consignment. We are the merchant of record.                                                                            |
-| Currency          | **NGN only** for the MVP. No switcher, no "West Africa" framing yet.                                                               |
-| Payments          | **Paystack.** Card, bank transfer, USSD and bank account all exist — design for all four, not just card.                           |
-| Fulfilment        | Door delivery **and** pickup from a collection point, coexisting. Neither defaults.                                                |
-| Estimator ending  | Pivots to **cart**. The WhatsApp and PDF exits stay.                                                                               |
-| Stock             | Build something that **tolerates both** models — held stock and pre-order against a supplier. Lead time is a range, not a promise. |
-| Pricing           | **Duty-inclusive.** One all-in Naira price. Delivery shown separately. Nothing appears for the first time on the last step.        |
+| Question          | Decision                                                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Marketplace model | Middleman / consignment. We are the merchant of record.                                                                              |
+| Currency          | **NGN only** for the MVP. No switcher, no "West Africa" framing yet.                                                                 |
+| Payments          | **Paystack.** Card, bank transfer, USSD and bank account all exist — design for all four, not just card.                             |
+| Fulfilment        | Door delivery **and** pickup from a collection point, coexisting. Neither defaults.                                                  |
+| Estimator ending  | Pivots to **cart**. The WhatsApp and PDF exits stay.                                                                                 |
+| Stock             | Build something that **tolerates both** models — held stock and pre-order against a supplier. Lead time is a range, not a promise.   |
+| Pricing           | **Duty-inclusive.** One all-in Naira price. Delivery shown separately. Nothing appears for the first time on the last step.          |
+| Listing images    | **Cloudflare R2** holds the bytes; **Cloudflare Images** transformations deliver them. One key in the database, resized at the edge. |
 
 That last one is the important one. A customs surprise on arrival would destroy
 exactly the trust the estimator was built to earn.
 
 ### Still open, and the founder's to settle
 
-| Question              | What is blocked on it                                                                                                                                                 |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Object storage        | No provider chosen, so no listing can hold a photograph. Blocks item 4 doing the one thing a product page must do. The schema is ready; only the provider is missing. |
-| Who photographs stock | Supplier-supplied images or our own. See below — this is a liability question, not a production one.                                                                  |
-| Admin dashboard       | Undesigned. `apps/admin` is untouched scaffold, and item 10 needs it.                                                                                                 |
+| Question              | What is blocked on it                                                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Who photographs stock | Supplier-supplied images or our own. See below — this is a liability question, not a production one, and it is now the ONLY thing standing between a listing and a photograph. |
+| Admin dashboard       | Undesigned. `apps/admin` is untouched scaffold, and item 10 needs it.                                                                                                          |
 
 **On photography.** We are the merchant of record, so the picture on a listing is
 _our_ description of the goods, and under the FCCPA a misdescribed good is a
@@ -83,8 +83,17 @@ refund whatever the policy says. A supplier's own photograph — of a different
 batch, a different trim, a lamp with the other connector — becomes our
 misdescription the moment we publish it. Shooting the stock we hold ourselves is
 the safer answer and a real operational cost, which is worth knowing now rather
-than discovering at item 4. Until it is settled the store draws instead of
+than discovering later. Until it is settled the store draws instead of
 photographing; see §10.
+
+**The plumbing for it is built and waiting.** R2 and the delivery path landed
+with item 4 (`apps/web/src/lib/images.ts`, `components/listing-photo.tsx`), so
+the day that call is made the only remaining work is uploading files and writing
+alt text. Set `NEXT_PUBLIC_IMAGE_BASE_URL` to the bucket's Cloudflare custom
+domain and photographs start appearing; leave it unset — as it is today — and
+every listing takes its drawn state, which is the correct behaviour while we
+hold no photography. There is no half-configured mode in which a customer sees a
+broken image.
 
 ---
 
@@ -191,12 +200,12 @@ design.
 
 **Coming with the marketplace**
 
-| Platform                             | For                          | What you'll need to know                                                                                                                                                    |
-| ------------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Paystack                             | payments                     | See below — it has sharp edges                                                                                                                                              |
-| Object storage                       | part photos, estimate photos | Schema already stores only a key, not the blob. **Provider not chosen, and item 4 needs one** — a product screen with no photograph of the product is not a product screen. |
-| A logistics partner                  | delivery + pickup points     | Not chosen. GIG, Kwik, Sendbox and Jumia Delivery are the field; Jumia alone runs ~494 pickup stations in Nigeria.                                                          |
-| A freight forwarder / sourcing agent | China→Nigeria consolidation  | Operational, not code — but it sets the lead times the UI has to state honestly.                                                                                            |
+| Platform                             | For                          | What you'll need to know                                                                                                                                                                                                                                                                          |
+| ------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Paystack                             | payments                     | See below — it has sharp edges                                                                                                                                                                                                                                                                    |
+| Cloudflare R2 + Images               | part photos, estimate photos | **Chosen.** R2 stores the object; the bucket sits behind a Cloudflare custom domain and delivery goes through `/cdn-cgi/image/<options>/<key>` — resized and format-negotiated at the edge, not on our Railway container. The database still holds only a key. Env: `NEXT_PUBLIC_IMAGE_BASE_URL`. |
+| A logistics partner                  | delivery + pickup points     | Not chosen. GIG, Kwik, Sendbox and Jumia Delivery are the field; Jumia alone runs ~494 pickup stations in Nigeria.                                                                                                                                                                                |
+| A freight forwarder / sourcing agent | China→Nigeria consolidation  | Operational, not code — but it sets the lead times the UI has to state honestly.                                                                                                                                                                                                                  |
 
 ### Paystack, concretely
 
@@ -415,8 +424,13 @@ product is the visual form of an invented part number. The store draws instead
 (`apps/web/src/components/part-art.tsx`), because a schematic can honestly say
 "this is the kind of thing" without claiming "this is the item you will receive".
 Real photographs are allowed, and wanted, once they are photographs **of the
-listing being sold** — that is what `listing_photos` is for, and it needs an
-object-storage provider first.
+listing being sold** — that is what `listing_photos` is for. The storage and
+delivery for it now exist (R2 + Cloudflare Images, §7); what does not exist yet
+is the photographs themselves and the decision about who takes them, so every
+frame in the store currently renders its drawn state. `ListingPhotoFrame` gives
+the two states deliberately different proportions so they can never be mistaken
+for one another, and the product screen says in words that the picture is a
+drawing.
 
 **Everything else:**
 
@@ -457,12 +471,18 @@ object-storage provider first.
 - `apps/admin` renders only the scaffold's API health panel.
 
 **Also built:** the marketplace home at `/`, the persistent vehicle-context band,
-and the whole commerce schema and its contracts. None of the commerce tables has
-a route in front of it yet — that is item 10.
+search and browse at `/parts`, product detail at `/parts/[slug]`, and the whole
+commerce schema and its contracts. None of the commerce tables has a route in
+front of it yet — the store runs on `apps/web/src/mock/listings.ts`, and wiring
+it to Postgres is item 10.
 
-**Does not exist:** search and browse, product detail, cart, checkout, order
-tracking, the admin dashboard, API wiring, object storage for part photos, and
-`apple-icon.png` (Apple touch icons can't be SVG, so it needs a rasterised
+`/cart` is now the store's one holding page, standing in for item 5 so the
+product screen's buy button is not a dead link — the same job `/parts` did while
+item 2 shipped.
+
+**Does not exist:** the cart, checkout, order tracking, the admin dashboard, API
+wiring, listing photographs (the storage and delivery for them exist — see §3),
+and `apple-icon.png` (Apple touch icons can't be SVG, so it needs a rasterised
 export).
 
 ### Two gaps the design opened — closed with item 1
@@ -483,6 +503,9 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 
 Ten items, worked **two per session**. Order matters — schema before screens.
 
+**Done: 1, 2, 3, 4. Next session takes 5 and 6** — the cart, then checkout
+and Paystack.
+
 1. ~~**Commerce schema and contracts**~~ — **done.** `suppliers`, `listings`
    (+ photos, + an append-only retail price ledger), `addresses`, `pickup_points`,
    `carts`, `orders` (+ items, + events), `payments` (+ raw provider events).
@@ -500,18 +523,27 @@ Ten items, worked **two per session**. Order matters — schema before screens.
    sharing one store with the estimator so the car is known to both halves.
    `/parts` is a holding page until item 3 lands, so no link on the home page is
    a dead one.
-3. **Search and browse** — by part name, number, category, or the `B1Vehicle`
-   cascade. Per-row fitment. Condition as a first-class axis. Replaces the
-   `/parts` holding page; `searchListingsQuerySchema` is already written for it.
-   **Next session starts here, with item 4.**
-4. **Product detail** — the screen the business lives or dies on. Fitment shown
-   as evidence, with "probably fits, can't confirm" as its own designed state.
-   **Needs the two open decisions in §3**: without object storage there is no
-   listing photograph, and the schematics in `part-art.tsx` are a category
-   signpost rather than a picture of the item. Build the photo frame and its
-   "no photograph yet" state regardless — the screen has to be honest when a
-   listing has no image, which will be the common case for a while.
+3. ~~**Search and browse**~~ — **done.** One screen and one query for both, at
+   `/parts`, replacing the holding page. Part name or number (punctuation
+   ignored, because nobody reads a hyphen off a casting), category, condition
+   and availability, all held in the URL so a filtered catalogue can be sent to
+   a mechanic. **The vehicle grades rather than filters** — rows we cannot vouch
+   for stay visible and marked, and `Only show confirmed fits` is the customer's
+   own choice and reports what it cost them. Results come in two tiers: parts
+   you can buy, and parts we can name but hold no priced offer for, which is a
+   better answer to a search than an empty page.
+4. ~~**Product detail**~~ — **done.** At `/parts/[slug]`, prerendered per
+   listing. Fitment sits above the price and is built as evidence — the claim,
+   the chassis it was matched on, the source, and what narrowing still applies —
+   with `probable` given the caution treatment so it can never be skimmed as a
+   yes. Also: the FX price-validity window, lead time as a range and never a
+   date, the other condition grade offered as a choice rather than a discount,
+   and the FCCPA position stated where the money is committed.
+   **The photography half of §3 is now settled** — R2 for the bytes, Cloudflare
+   Images for delivery — so the frame, its drawn state and the delivery pipeline
+   are all built. Who takes the photographs is still the founder's call.
 5. **Cart** — line snapshots, per-line fitment recheck, mixed lead times.
+   Replaces the `/cart` holding page. **Next session starts here, with item 6.**
 6. **Checkout and Paystack** — guest checkout, phone as identity, delivery or
    pickup, Nigerian address shape, server-side verify and signed webhooks.
 7. **Confirmation, tracking, order history** — through to customs clearance,

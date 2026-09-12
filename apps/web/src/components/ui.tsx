@@ -497,3 +497,59 @@ export function Toggle({
     </button>
   );
 }
+
+/**
+ * The quantity stepper — the first control the marketplace needs that the
+ * estimator never had, designed into the system rather than borrowed from
+ * outside it. Square, ruled, no radii, and the two buttons are full 44px
+ * targets because this is a thumb on a cracked screen like everything else.
+ *
+ * The number itself is mono: it is a quantity somebody may read back over the
+ * phone when they query an order, which is the same test every other mono
+ * figure in this product passes.
+ */
+export function QuantityStepper({
+  value,
+  onChange,
+  min = 1,
+  max = 99,
+  label,
+}: {
+  value: number;
+  onChange: (next: number) => void;
+  min?: number;
+  max?: number;
+  label: string;
+}) {
+  const clamp = (next: number) => Math.min(max, Math.max(min, next));
+
+  return (
+    <div
+      className="border-ink inline-flex items-stretch border-2 bg-white"
+      role="group"
+      aria-label={label}
+    >
+      <button
+        type="button"
+        onClick={() => onChange(clamp(value - 1))}
+        disabled={value <= min}
+        aria-label="One fewer"
+        className="border-ink text-ink disabled:text-faint flex h-[44px] w-[44px] flex-none items-center justify-center border-r-[1.5px] text-[18px] font-black leading-none disabled:cursor-not-allowed"
+      >
+        −
+      </button>
+      <output className="flex min-w-[52px] items-center justify-center px-[10px] font-mono text-[15px] font-bold leading-none">
+        {value}
+      </output>
+      <button
+        type="button"
+        onClick={() => onChange(clamp(value + 1))}
+        disabled={value >= max}
+        aria-label="One more"
+        className="border-ink text-ink disabled:text-faint flex h-[44px] w-[44px] flex-none items-center justify-center border-l-[1.5px] text-[18px] font-black leading-none disabled:cursor-not-allowed"
+      >
+        +
+      </button>
+    </div>
+  );
+}
