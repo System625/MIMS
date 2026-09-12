@@ -123,7 +123,7 @@ export function CoverageCheck() {
             ) : null}
 
             {status !== 'none' ? (
-              <Button variant="primary" size="lg" full href="/" className="mt-[14px]">
+              <Button variant="primary" size="lg" full href="/estimate/new" className="mt-[14px]">
                 Start an estimate for a {make}
               </Button>
             ) : null}

@@ -18,7 +18,12 @@ export default function MyEstimatesPage() {
           <PageHeading
             title="My estimates"
             aside={
-              <Button variant="primary" size="md" href="/" className="min-h-[50px] flex-none">
+              <Button
+                variant="primary"
+                size="md"
+                href="/estimate/new"
+                className="min-h-[50px] flex-none"
+              >
                 New estimate
               </Button>
             }

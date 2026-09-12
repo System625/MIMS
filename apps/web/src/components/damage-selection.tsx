@@ -27,7 +27,7 @@ export function DamageSelection() {
           We need the vehicle before the damage — part numbers are matched to the chassis, so a
           panel on its own tells us nothing.
         </p>
-        <Button variant="dark" size="md" href="/" className="mt-[14px]">
+        <Button variant="dark" size="md" href="/estimate/new" className="mt-[14px]">
           Identify the vehicle
         </Button>
       </Panel>

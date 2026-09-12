@@ -9,13 +9,13 @@ export const metadata: Metadata = {
 };
 
 /**
- * Screen 1 of the estimator, and the app's entry point.
+ * Screen 1 of the estimator.
  *
- * The landing page from the original brief has not been designed yet — the
- * design canvas ends with "Remaining from the original brief: landing page and
- * admin dashboard" — so rather than invent one, `/` opens the estimator. Nothing
- * here needs to move when the landing page arrives; it becomes `/` and this
- * becomes `/estimate/new`.
+ * This lived at `/` while the estimator was the whole product. The marketplace
+ * home is the front door now, so the estimator starts here — the move the
+ * original handover note anticipated, and nothing in the flow changed with it.
+ * A user arrives from the store's "I'm not sure what I need" route, or straight
+ * from a search, and leaves at screen 3 with either a parts list or a cart.
  */
 export default function VehiclePage() {
   return (

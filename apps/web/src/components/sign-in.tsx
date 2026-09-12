@@ -168,7 +168,13 @@ export function SignIn({ reference }: { reference: string }) {
               >
                 Sign in again
               </Button>
-              <Button variant="outline" size="md" full href="/" className="mt-[11px] min-h-[46px]">
+              <Button
+                variant="outline"
+                size="md"
+                full
+                href="/estimate/new"
+                className="mt-[11px] min-h-[46px]"
+              >
                 Start a new estimate
               </Button>
             </>

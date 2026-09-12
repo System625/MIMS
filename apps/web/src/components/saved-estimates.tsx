@@ -138,7 +138,12 @@ function EmptyState() {
       </p>
 
       <div className="mt-[16px] flex flex-wrap justify-center gap-[10px]">
-        <Button variant="primary" size="lg" href="/" className="min-h-[52px] flex-[0_1_240px]">
+        <Button
+          variant="primary"
+          size="lg"
+          href="/estimate/new"
+          className="min-h-[52px] flex-[0_1_240px]"
+        >
           Estimate a repair
         </Button>
         <Button

@@ -1,26 +1,29 @@
 # MIMS
 
-Car spare parts platform for the Nigerian market. Phase one is a **damage
-estimator**: identify a vehicle, tick the damaged body zones, get back the parts
-needed with estimated Naira prices.
+Car spare parts platform for the Nigerian market. Two halves of one product: a
+**damage estimator** — identify a vehicle, tick the damaged body zones, get back
+the parts needed with estimated Naira prices — and a **parts marketplace** that
+sells those parts at one all-in Naira price. MIMS is the merchant of record on a
+consignment model, so suppliers are admin rows rather than users: there is no
+seller portal and there will not be one.
 
-A buyer-to-seller marketplace comes later. The schema is shaped to accept it; no
-marketplace code exists yet.
-
-> **Status: web frontend built against mock data.** Every consumer screen from
-> the Claude Design canvas is implemented in `apps/web` and runs end to end
-> without the API. The API still returns typed stubs, and every part number and
-> price is placeholder data carried over from the design — see
+> **Status: web frontend built against mock data; the marketplace is being built
+> schema-first.** Every consumer screen from the design canvas is implemented in
+> `apps/web` and runs end to end without the API. The commerce schema and its
+> contracts exist (suppliers, listings, carts, orders, addresses, pickup points,
+> payments, order events) and the marketplace home is live at `/`, with the
+> estimator now starting at `/estimate/new`. The API still returns typed stubs,
+> and every part number and price is placeholder data — see
 > [The AI boundary](#the-ai-boundary) and `apps/web/src/mock/parts.ts`.
 >
-> Not built yet: the landing page and the admin dashboard, neither of which has
-> been designed. See [What is not built](#what-is-not-built).
+> Not built yet: search and browse, product detail, cart, checkout and the admin
+> dashboard. See [What is not built](#what-is-not-built).
 
 ## Layout
 
 ```
 apps/
-  web      Next.js (App Router) — the estimator              → Railway
+  web      Next.js (App Router) — store and estimator       → Railway
   admin    Vite + React SPA — internal catalogue tooling      → Cloudflare Pages
   api      NestJS — serves web, admin, and a future mobile app → Railway
 packages/
@@ -47,14 +50,17 @@ pnpm db:seed        # placeholder vehicles, parts and prices
 pnpm dev            # api :3333 · web :3000 · admin :5173
 ```
 
-Visit <http://localhost:3000> for the estimator. **It needs neither the API nor
+Visit <http://localhost:3000> for the store, or `/estimate/new` for the
+estimator. **It needs neither the API nor
 the database** — the whole flow runs on the mock catalogue in
 `apps/web/src/mock`, so `pnpm --filter @mims/web dev` on its own is enough to
 work on the frontend. `apps/admin` still renders only the scaffold's API health
 panel, and that panel should go when the admin screens are designed.
 
-[`TESTING.md`](TESTING.md) is the walkthrough: which VIN decodes, which makes
-are deliberately uncovered, and how to reach each of the five states.
+[`bella.md`](bella.md) is the onboarding doc and the walkthrough: the stack, the
+platforms, the decisions already made, the rules that are not negotiable, and
+which VIN decodes, which makes are deliberately uncovered, and how to reach each
+of the five states.
 
 ## Screens
 
@@ -64,7 +70,9 @@ mobile build). Every route below is a transcription of one of its files.
 
 | Route                            | Design file    | What it is                                        |
 | -------------------------------- | -------------- | ------------------------------------------------- |
-| `/`                              | `B1Vehicle`    | Screen 1 — VIN or manual cascade, as siblings     |
+| `/`                              | —              | The marketplace home. Not from the canvas.        |
+| `/parts`                         | —              | Browse. A holding page until build-plan item 3.   |
+| `/estimate/new`                  | `B1Vehicle`    | Screen 1 — VIN or manual cascade, as siblings     |
 | `/damage`                        | `B2Damage`     | Screen 2 — plan-view diagram **and** checklist    |
 | `/estimate`                      | `B3Results`    | Screen 3 — parts table, prices, WhatsApp exit     |
 | `/states`                        | `B4States`     | Screen 4 — the five states, side by side          |
@@ -80,14 +88,25 @@ mobile build). Every route below is a transcription of one of its files.
 | `/privacy`                       | `B14Privacy`   | What we hold, why, and for how long               |
 
 The five states in `B4States` are built as components used by the live flow, not
-as illustrations — `/states` just shows them together. A bad VIN on `/` really
-does produce state 01; an uncovered make (try Peugeot) really does produce state
+as illustrations — `/states` just shows them together. A bad VIN on
+`/estimate/new` really does produce state 01; an uncovered make (try Peugeot) really does produce state
 02; `/estimate` passes through the loading state on the way to results.
 
 Component inventory: `src/components/ui.tsx` (buttons, panels, inputs, toggles,
 segmented controls), `chrome.tsx` (header, shell, page heading, footer),
 `zone-selector.tsx`, `parts-table.tsx`, `part-number.tsx`, `states.tsx`,
-`mark.tsx`.
+`mark.tsx`, `vehicle-context.tsx`.
+
+The marketplace screens are **not** transcriptions. The estimator was built from
+the design canvas and that canvas is its specification; the store is built from
+the same system by decision, extending `globals.css` and the inventory above
+rather than waiting on artboards. Anything the store needs that the estimator
+never had — a price that is a price rather than an estimate, a quantity stepper,
+a delivery selector — gets designed _inside_ that system.
+
+`vehicle-context.tsx` is the store's spine: the car you are shopping for, shown
+on every marketplace page and changeable in place. It shares one localStorage
+store with the estimator, so a car set in either half is known to both.
 
 ### The logo
 
@@ -108,14 +127,18 @@ rasterised export the App Router picks up by filename.
 
 ## What is not built
 
-- **Landing page.** Not designed — the canvas ends with "Remaining from the
-  original brief: landing page and admin dashboard". Rather than invent one, `/`
-  opens the estimator. When the landing page arrives it takes `/` and screen 1
-  moves to `/estimate/new`; nothing else has to change.
-- **Admin dashboard.** Also not designed. `apps/admin` is untouched.
+- **The rest of the store.** Search and browse, product detail, cart, checkout
+  and Paystack, order tracking, and the estimator's "add these to a cart" exit.
+  They are items 3 to 9 of the build plan in `bella.md` §12, worked two per
+  session and in that order. `/parts` is a holding page so the home page's links
+  are real; it is the only inert route in the store.
+- **Admin dashboard.** Not designed, and that is the founder's call to make.
+  `apps/admin` is untouched scaffold.
 - **API wiring.** `src/lib/api-client.ts` is the typed client and is ready; the
   screens read from `src/mock` instead. Each mock module names the query that
-  replaces it.
+  replaces it. Nothing in the commerce schema has a route in front of it yet.
+- **Object storage.** `listing_photos` stores a key, not a blob, and no provider
+  is chosen — so listings have no photographs anywhere yet.
 
 ## Root scripts
 
@@ -144,22 +167,23 @@ apps/admin      →  typed client, return types from contracts
 No `any`, and no hand-written interface describing a row or a response. A change
 to a route's shape becomes a compile error in both frontends.
 
-### Two gaps the design opened
+### Two gaps the design opened — now closed
 
-Building the screens surfaced two things the contracts do not yet carry. Both are
-catalogue data rather than presentation, so they belong on the schema:
+Building the screens surfaced two things the contracts did not carry. Both were
+catalogue data rather than presentation, so both went onto the schema when the
+commerce tables did:
 
-1. **`estimateItemSchema` needs a `detail` and a source label.** The results
-   table prints a fitment note under each part name ("Primed, unpainted.
-   Fog-lamp cut-outs for LE trim.") and a source tag in the last column
-   ("Genuine only"). `apps/web/src/mock/parts.ts` carries them on a local
-   `EstimateItemView` for now, marked with this note.
-2. **`ResolvedVehicle` needs a chassis code.** Parts are matched to the chassis,
-   not the model name — it is the product's central claim, it is printed on the
-   confirmation band, the shared estimate and the PDF, and there is no field for
-   it. `VehicleDetail` in `src/mock/vehicles.ts` adds it locally.
+1. **`estimateItemSchema` has `detail` and `sourceLabel`.** The results table
+   prints a fitment note under each part name ("Primed, unpainted. Fog-lamp
+   cut-outs for LE trim.") and a source tag in the last column ("Genuine only").
+   They are snapshotted on `estimate_items` with the rest of the row, because
+   they are part of what the user was told.
+2. **`ResolvedVehicle` has `chassisCode`** (and `bodyStyle`), and
+   `vehicle_variants` has the column behind it. Parts are matched to the chassis
+   rather than the model name — it is the product's central claim and it is
+   printed in three places.
 
-Also worth knowing: the design uses **nine** damage zones, not the seven the API
+Still worth knowing: the design uses **nine** damage zones, not the seven the API
 stubs. It splits headlights and fenders into left and right and separates the
 rear bumper from the rear panel, so a user who was rear-ended can point at one
 without claiming the other. `apps/web/src/mock/zones.ts` is the list to seed

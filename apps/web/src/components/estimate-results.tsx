@@ -68,7 +68,12 @@ export function EstimateResults() {
             ? 'Mark which panels are damaged and we will match the parts.'
             : 'Start with the car — parts are matched to its chassis code, not to the model name.'}
         </p>
-        <Button variant="dark" size="md" href={vehicle ? '/damage' : '/'} className="mt-[14px]">
+        <Button
+          variant="dark"
+          size="md"
+          href={vehicle ? '/damage' : '/estimate/new'}
+          className="mt-[14px]"
+        >
           {vehicle ? 'Mark the damage' : 'Identify the vehicle'}
         </Button>
       </Panel>

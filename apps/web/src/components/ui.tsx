@@ -43,14 +43,17 @@ export function Kicker({
 export function Title({
   children,
   className,
+  id,
   as: Tag = 'h2',
 }: {
   children: ReactNode;
   className?: string;
+  /** Set when a section uses its own heading as the accessible name via aria-labelledby. */
+  id?: string;
   as?: 'h1' | 'h2' | 'h3' | 'div';
 }) {
   return (
-    <Tag className={cx('text-[20px] font-bold uppercase leading-[1.15]', className)}>
+    <Tag id={id} className={cx('text-[20px] font-bold uppercase leading-[1.15]', className)}>
       {children}
     </Tag>
   );

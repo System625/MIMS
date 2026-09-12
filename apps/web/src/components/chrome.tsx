@@ -12,7 +12,7 @@ import { cx, Kicker } from './ui';
 export type FlowStep = 'vehicle' | 'damage' | 'parts' | null;
 
 const STEPS: ReadonlyArray<{ id: Exclude<FlowStep, null>; label: string; href: string }> = [
-  { id: 'vehicle', label: '01 VEHICLE', href: '/' },
+  { id: 'vehicle', label: '01 VEHICLE', href: '/estimate/new' },
   { id: 'damage', label: '02 DAMAGE', href: '/damage' },
   { id: 'parts', label: '03 PARTS', href: '/estimate' },
 ];
@@ -24,7 +24,7 @@ const STEPS: ReadonlyArray<{ id: Exclude<FlowStep, null>; label: string; href: s
  */
 function Wordmark() {
   return (
-    <Link href="/" className="flex items-center gap-[9px]" aria-label="MIMS — home">
+    <Link href="/" className="flex items-center gap-[9px]" aria-label="MIMS — parts store home">
       <Mark size={18} tone="dark" />
       <span className="text-paper text-[15px] font-black uppercase leading-none tracking-[0.06em]">
         MIMS

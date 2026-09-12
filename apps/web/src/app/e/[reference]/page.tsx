@@ -161,7 +161,12 @@ export default async function SharedEstimatePage({
             <div className="text-muted mt-[5px] text-[12.5px] leading-[1.5]">
               Free. No account needed.
             </div>
-            <Button variant="primary" size="md" href="/" className="mt-[11px] min-h-[48px]">
+            <Button
+              variant="primary"
+              size="md"
+              href="/estimate/new"
+              className="mt-[11px] min-h-[48px]"
+            >
               Start an estimate
             </Button>
           </Note>

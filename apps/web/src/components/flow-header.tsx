@@ -26,7 +26,7 @@ export function FlowHeader({ step }: { step: FlowStep }) {
       meta={
         <>
           {vehicleStamp(vehicle)} ·{' '}
-          <Link href="/" className="text-flag underline">
+          <Link href="/estimate/new" className="text-flag underline">
             Change
           </Link>
         </>
