@@ -21,18 +21,19 @@ import { sortZoneCodes, zoneByCode, zoneName } from './zones';
 const PRICED_AT = '2026-09-04T00:00:00.000Z';
 
 /**
- * Two fields the design needs that `estimateItemSchema` has no home for yet:
- * the fitment note under each part name, and the source tag in the last column.
- * Both are catalogue data rather than presentation, so when the API is wired
- * they belong on the contract — see the note in the handover summary.
+ * The fitment note and the source tag now live on `estimateItemSchema` itself —
+ * both are catalogue data rather than presentation, and the contract gap that
+ * forced them onto this view type has been closed. What remains here is the one
+ * genuinely presentational field: the ordinal stamp that ties a table row to the
+ * diagram, which is derived from the zone rather than stored.
  */
 export interface EstimateItemView extends EstimateItem {
   /** Diagram/table stamp, taken from the zone. */
   ordinal: string;
-  /** "Primed, unpainted. Fog-lamp cut-outs for LE trim." */
+  /** Non-null on every built row: "Primed, unpainted. Fog-lamp cut-outs for LE trim." */
   detail: string;
-  /** "Aftermarket & genuine" · "Genuine only" · "Coverage gap" */
-  sourceTag: string;
+  /** Non-null on every built row: "Aftermarket & genuine" · "Genuine only" · "Coverage gap" */
+  sourceLabel: string;
 }
 
 export interface EstimateView extends Estimate {
@@ -248,7 +249,7 @@ export function buildEstimate(
         price,
         priceRecordedAt: price !== null ? createdAt : null,
         detail: inCatalogue ? row.detail : 'Not in our catalogue for this vehicle yet.',
-        sourceTag: price !== null ? row.sourceTag : 'Coverage gap',
+        sourceLabel: price !== null ? row.sourceTag : 'Coverage gap',
       },
     ];
   });
@@ -266,6 +267,8 @@ export function buildEstimate(
       year: vehicle.year,
       trim: vehicle.trim,
       engine: vehicle.engine,
+      chassisCode: vehicle.chassisCode,
+      bodyStyle: vehicle.bodyStyle,
       inCatalogue: vehicle.inCatalogue,
     },
     identificationMethod: 'vin',

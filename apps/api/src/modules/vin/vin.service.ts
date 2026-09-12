@@ -47,6 +47,10 @@ export class VinService {
       year: value.year,
       trim: value.trim,
       engine: value.engine,
+      // vPIC does not return a chassis code; it comes from our own variant match,
+      // which is the TODO above. Null until then rather than guessed.
+      chassisCode: null,
+      bodyStyle: null,
       inCatalogue: false,
     };
 

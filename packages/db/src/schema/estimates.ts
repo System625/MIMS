@@ -103,6 +103,15 @@ export const estimateItems = pgTable(
     oemNumber: text(),
     position: partPosition().notNull().default('not_applicable'),
     quantity: integer().notNull().default(1),
+    /**
+     * The fitment note printed under the part name on the results table —
+     * "Primed, unpainted. Fog-lamp cut-outs for LE trim." Catalogue data, not
+     * presentation, which is why it is snapshotted here rather than composed in
+     * the frontend.
+     */
+    detail: text(),
+    /** The provenance tag in the last column: "Aftermarket & genuine", "Coverage gap". */
+    sourceLabel: text(),
 
     // --- price snapshot; all NULL when isPriced is false ---
     /** False means "you need this part and we don't have a price yet" — shown explicitly. */

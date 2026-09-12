@@ -106,7 +106,7 @@ export function PartsTable({
 
             <span className={cx(COL.source, 'text-ink-soft min-w-0 text-[11px] leading-[1.35]')}>
               <MobileLabel>Source</MobileLabel>
-              {item.sourceTag}
+              {item.sourceLabel}
             </span>
           </li>
         ))}

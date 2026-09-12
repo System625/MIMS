@@ -44,3 +44,37 @@ export type NewWaitlistEntry = typeof schema.waitlistEntries.$inferInsert;
 
 export type VinLookup = typeof schema.vinLookups.$inferSelect;
 export type NewVinLookup = typeof schema.vinLookups.$inferInsert;
+
+/* ------------------------------------------------------------- commerce -- */
+
+export type Supplier = typeof schema.suppliers.$inferSelect;
+export type NewSupplier = typeof schema.suppliers.$inferInsert;
+
+export type Listing = typeof schema.listings.$inferSelect;
+export type NewListing = typeof schema.listings.$inferInsert;
+export type ListingPhoto = typeof schema.listingPhotos.$inferSelect;
+export type NewListingPhoto = typeof schema.listingPhotos.$inferInsert;
+export type ListingPriceChange = typeof schema.listingPriceChanges.$inferSelect;
+export type NewListingPriceChange = typeof schema.listingPriceChanges.$inferInsert;
+
+export type Address = typeof schema.addresses.$inferSelect;
+export type NewAddress = typeof schema.addresses.$inferInsert;
+export type PickupPoint = typeof schema.pickupPoints.$inferSelect;
+export type NewPickupPoint = typeof schema.pickupPoints.$inferInsert;
+
+export type Cart = typeof schema.carts.$inferSelect;
+export type NewCart = typeof schema.carts.$inferInsert;
+export type CartItem = typeof schema.cartItems.$inferSelect;
+export type NewCartItem = typeof schema.cartItems.$inferInsert;
+
+export type Order = typeof schema.orders.$inferSelect;
+export type NewOrder = typeof schema.orders.$inferInsert;
+export type OrderItem = typeof schema.orderItems.$inferSelect;
+export type NewOrderItem = typeof schema.orderItems.$inferInsert;
+export type OrderEvent = typeof schema.orderEvents.$inferSelect;
+export type NewOrderEvent = typeof schema.orderEvents.$inferInsert;
+
+export type Payment = typeof schema.payments.$inferSelect;
+export type NewPayment = typeof schema.payments.$inferInsert;
+export type PaymentEvent = typeof schema.paymentEvents.$inferSelect;
+export type NewPaymentEvent = typeof schema.paymentEvents.$inferInsert;

@@ -37,6 +37,14 @@ export const estimateItemSchema = z.object({
   oemNumber: z.string().nullable(),
   position: partPositionSchema,
   quantity: z.number().int().min(1),
+  /**
+   * The fitment note under the part name: "Primed, unpainted. Fog-lamp cut-outs
+   * for LE trim." Catalogue data, snapshotted with the row rather than composed
+   * in the frontend — it is part of what the user was told.
+   */
+  detail: z.string().nullable(),
+  /** Provenance tag in the last column: "Aftermarket & genuine", "Coverage gap". */
+  sourceLabel: z.string().nullable(),
   /** False means: this part is needed, and we do not have a price. Say so explicitly. */
   isPriced: z.boolean(),
   condition: partConditionSchema.nullable(),

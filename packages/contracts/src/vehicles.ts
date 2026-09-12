@@ -27,6 +27,8 @@ export const vehicleVariantSchema = z.object({
   /** null means the variant covers every trim of the generation. */
   trim: z.string().nullable(),
   engine: z.string().nullable(),
+  /** Chassis / platform code, e.g. "ZRE172". Parts match to this, not the model name. */
+  chassisCode: z.string().nullable(),
   bodyStyle: z.string().nullable(),
 });
 export type VehicleVariant = z.infer<typeof vehicleVariantSchema>;
@@ -39,6 +41,14 @@ export const resolvedVehicleSchema = z.object({
   year: z.number().int().nullable(),
   trim: z.string().nullable(),
   engine: z.string().nullable(),
+  /**
+   * The chassis code, e.g. "ZRE172". Printed on the confirmation band, the
+   * results sheet and every listing, because matching to the chassis rather than
+   * to the model name is the product's central claim — it is why a 2018 and a
+   * 2019 that look identical take different part numbers.
+   */
+  chassisCode: z.string().nullable(),
+  bodyStyle: z.string().nullable(),
   /** True when we hold catalogue data for this vehicle. False drives the coverage-gap screen. */
   inCatalogue: z.boolean(),
 });

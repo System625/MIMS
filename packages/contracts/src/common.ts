@@ -63,12 +63,50 @@ export const uuidSchema = z.uuid();
  * Money crosses the wire as a decimal STRING, matching Postgres numeric. Parsing
  * to a float is the caller's explicit decision, never an accident of transport.
  */
+export const decimalAmountSchema = z
+  .string()
+  .regex(/^\d+(\.\d{1,2})?$/, 'Expected a decimal amount');
+
 export const moneySchema = z.object({
-  min: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Expected a decimal amount'),
-  max: z.string().regex(/^\d+(\.\d{1,2})?$/, 'Expected a decimal amount'),
+  min: decimalAmountSchema,
+  max: decimalAmountSchema,
   currency: z.literal('NGN'),
 });
 export type Money = z.infer<typeof moneySchema>;
+
+/**
+ * A single figure, not a range — the marketplace's shape. An estimate answers
+ * "about what will this cost?" and must show a range; a listing answers "what
+ * will you charge me?" and a range there would be a haggle, not a price.
+ *
+ * It is duty-inclusive. Delivery is added once, visibly, before payment.
+ */
+export const priceSchema = z.object({
+  amount: decimalAmountSchema,
+  currency: z.literal('NGN'),
+});
+export type Price = z.infer<typeof priceSchema>;
+
+/**
+ * Lead time is ALWAYS a range and never a date. Sea freight from China is 3-6
+ * weeks and customs clearance stalls unpredictably on top of that, so a promised
+ * delivery date is a promise we cannot keep. Both bounds are days from payment.
+ */
+export const leadTimeSchema = z.object({
+  minDays: z.number().int().min(0),
+  maxDays: z.number().int().min(0),
+});
+export type LeadTime = z.infer<typeof leadTimeSchema>;
+
+/**
+ * Nigerian mobile number, as typed: `0803…`, `+234803…` or `234803…`. Phone is
+ * the identity at checkout, so this is validated rather than trusted, and
+ * normalised to a single form in the service layer.
+ */
+export const nigerianPhoneSchema = z
+  .string()
+  .trim()
+  .regex(/^(?:\+?234|0)[789]\d{9}$/, 'Enter a Nigerian mobile number, e.g. 0803 123 4567');
 
 export const healthSchema = z.object({
   status: z.enum(['ok', 'degraded']),

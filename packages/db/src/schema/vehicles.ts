@@ -74,6 +74,13 @@ export const vehicleVariants = pgTable(
     engine: text(),
     /** Manufacturer engine code where known, e.g. "2AR-FE". */
     engineCode: text(),
+    /**
+     * Chassis / platform code, e.g. "ZRE172". Parts match to this, not to the
+     * model name — it is the reason a 2018 and a 2019 that look identical take
+     * different part numbers, and it is the product's central claim. Printed on
+     * the confirmation band, the results sheet and every marketplace listing.
+     */
+    chassisCode: text(),
     bodyStyle: text(),
     notes: text(),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),

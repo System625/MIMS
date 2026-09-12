@@ -45,14 +45,15 @@ export function isCovered(make: string | null): boolean {
 }
 
 /**
- * Extra facts the confirmation band shows that `ResolvedVehicle` has no field
- * for yet. Chassis code is the important one — parts are matched to it rather
- * than to the model name, which is the whole reason a 2018 and a 2019 that look
- * identical get different part numbers.
+ * The chassis code and body style the confirmation band shows now live on
+ * `ResolvedVehicle` itself — parts are matched to the chassis rather than to the
+ * model name, which is the whole reason a 2018 and a 2019 that look identical
+ * get different part numbers, and a contract that could not say so was a gap.
+ *
+ * `partsOnFile` stays local: it is a count we compute for display, not a fact
+ * about the vehicle.
  */
 export interface VehicleDetail extends ResolvedVehicle {
-  chassisCode: string | null;
-  bodyStyle: string | null;
   partsOnFile: number | null;
 }
 

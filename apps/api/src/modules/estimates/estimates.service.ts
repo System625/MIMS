@@ -67,6 +67,10 @@ export class EstimatesService {
         year: facts.year,
         trim: null,
         engine: null,
+        // TODO: read the chassis code off the matched variant. Parts match to it,
+        // so an empty one here is a real gap in the answer, not a cosmetic one.
+        chassisCode: null,
+        bodyStyle: null,
         inCatalogue: facts.matchedFromCatalogue,
       },
       identificationMethod: request.identificationMethod,
@@ -122,6 +126,8 @@ const MOCK_ITEMS: EstimateItem[] = [
     condition: 'new_aftermarket',
     price: { min: '85000.00', max: '120000.00', currency: 'NGN' },
     priceRecordedAt: '2026-09-01T00:00:00.000Z',
+    detail: 'Primed, unpainted.',
+    sourceLabel: 'Aftermarket & genuine',
   },
   {
     id: '00000000-0000-4000-8000-000000000062',
@@ -135,6 +141,8 @@ const MOCK_ITEMS: EstimateItem[] = [
     condition: 'new_aftermarket',
     price: { min: '95000.00', max: '145000.00', currency: 'NGN' },
     priceRecordedAt: '2026-09-01T00:00:00.000Z',
+    detail: 'Halogen, no bulb included.',
+    sourceLabel: 'Aftermarket & genuine',
   },
   {
     // The partial-coverage case, present from day one because it is the common one.
@@ -149,5 +157,7 @@ const MOCK_ITEMS: EstimateItem[] = [
     condition: null,
     price: null,
     priceRecordedAt: null,
+    detail: 'Fits, but we hold no verified Nigerian price yet.',
+    sourceLabel: 'Coverage gap',
   },
 ];

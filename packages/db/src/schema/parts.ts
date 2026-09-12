@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { crossReferenceType, partPosition } from './enums.js';
+import { crossReferenceType, fitmentConfidence, partPosition } from './enums.js';
 import { damageZones } from './zones.js';
 import { vehicleVariants } from './vehicles.js';
 
@@ -116,6 +116,16 @@ export const partZones = pgTable(
  * `yearStart`/`yearEnd` are NULL for the common case, meaning "the whole of the
  * variant's year range". They exist for mid-generation changes — a facelift that
  * altered the bumper in 2015 within a 2012-2017 variant.
+ *
+ * `confidence` is what the marketplace sells on. About half of all auto-parts
+ * returns are fitment errors, and against 3-6 week sea freight a return costs
+ * more than the part — so certainty has to be established before purchase, and
+ * the honest grades are shown rather than flattened. A row with `probable` means
+ * "this should fit, we have not confirmed it on your chassis", which is a state
+ * the product screen designs for. No row at all is the third case, `unknown`.
+ *
+ * Never write `confirmed` without something in `evidence`. The whole value of
+ * the grade is that it cannot be inferred.
  */
 export const partFitments = pgTable(
   'part_fitments',
@@ -131,6 +141,14 @@ export const partFitments = pgTable(
     yearEnd: integer(),
     /** Free-text narrowing, e.g. "with fog lamp holes", "halogen only". */
     qualifier: text(),
+    confidence: fitmentConfidence().notNull().default('confirmed'),
+    /**
+     * Where the claim comes from, in plain words: "Toyota EPC, ZRE172 section 5",
+     * "supplier catalogue", "physically compared against a 2017 car". Shown to
+     * the customer as evidence, so keep it presentable and specific.
+     */
+    evidence: text(),
+    verifiedAt: timestamp({ withTimezone: true }),
     createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [

@@ -86,6 +86,10 @@ async function seed() {
         label: 'E170',
         yearStart: 2014,
         yearEnd: 2019,
+        // The one chassis code in this file that is not invented: the design
+        // canvas states it for the 2018 Corolla LE. Camry and Accord are left
+        // NULL rather than filled in with something plausible.
+        chassisCode: 'ZRE172',
         bodyStyle: 'Sedan',
       },
       {
@@ -226,15 +230,32 @@ async function seed() {
     }),
   );
 
-  // Every seeded part fits the Camry generation; two also fit the Corolla, so the
-  // many-to-many has something real to exercise.
-  await db
-    .insert(t.partFitments)
-    .values([
-      ...inserted.map((part) => ({ partId: part.id, variantId: camryXv50.id })),
-      { partId: inserted[6]!.id, variantId: corollaE170.id, qualifier: 'Shared cooling pack' },
-      { partId: inserted[1]!.id, variantId: accordCr.id, qualifier: 'Placeholder cross-fitment' },
-    ]);
+  // Every seeded part fits the Camry generation; two also fit other models, so the
+  // many-to-many has something real to exercise. The cross-fitments are graded
+  // `probable` on purpose: "should fit, not confirmed on your chassis" is a state
+  // the product screen has to render, and it needs data to render it from.
+  await db.insert(t.partFitments).values([
+    ...inserted.map((part) => ({
+      partId: part.id,
+      variantId: camryXv50.id,
+      confidence: 'confirmed' as const,
+      evidence: 'Placeholder seed fitment — not a verified claim.',
+    })),
+    {
+      partId: inserted[6]!.id,
+      variantId: corollaE170.id,
+      qualifier: 'Shared cooling pack',
+      confidence: 'probable' as const,
+      evidence: 'Placeholder seed fitment — cross-reference not physically confirmed.',
+    },
+    {
+      partId: inserted[1]!.id,
+      variantId: accordCr.id,
+      qualifier: 'Placeholder cross-fitment',
+      confidence: 'probable' as const,
+      evidence: 'Placeholder seed fitment — cross-reference not physically confirmed.',
+    },
+  ]);
 
   await db.insert(t.partPrices).values(
     inserted.map((part, i) => ({
@@ -248,13 +269,118 @@ async function seed() {
     })),
   );
 
+  /* ------------------------------------------------------- marketplace -- */
+
+  // Suppliers are admin rows, not users — there is no seller portal, and these
+  // two exist only so a listing has something to hang off. One holds stock in
+  // Lagos and ships in days; one is sourced from China and lands in weeks.
+  const [lagosStock, chinaSourced] = await db
+    .insert(t.suppliers)
+    .values([
+      {
+        name: 'Placeholder Lagos supplier',
+        slug: 'placeholder-lagos-supplier',
+        countryCode: 'NG',
+        city: 'Lagos',
+        defaultLeadTimeMinDays: 2,
+        defaultLeadTimeMaxDays: 5,
+        notes: 'Placeholder seed supplier — not a real trading relationship.',
+      },
+      {
+        name: 'Placeholder sourcing agent',
+        slug: 'placeholder-sourcing-agent',
+        countryCode: 'CN',
+        defaultLeadTimeMinDays: 21,
+        defaultLeadTimeMaxDays: 45,
+        notes: 'Placeholder seed supplier — not a real trading relationship.',
+      },
+    ])
+    .returning();
+  if (!lagosStock || !chinaSourced) throw new Error('Supplier seed failed.');
+
+  // One held-stock listing per part, plus two tokunbo pre-orders so condition is
+  // exercised as the axis it is: genuine and tokunbo are different goods at
+  // different prices, not a discount on each other.
+  //
+  // Retail figures are the invented `priceMax` from the table above. They are
+  // duty-inclusive by policy, which here means nothing, because they are fake.
+  const listingRows = [
+    ...inserted.map((part, i) => ({
+      partId: part.id,
+      supplierId: lagosStock.id,
+      sku: `PLACEHOLDER-SKU-${String(i + 1).padStart(4, '0')}`,
+      condition: 'new_aftermarket' as const,
+      stockModel: 'held_stock' as const,
+      status: 'active' as const,
+      retailPrice: partSeeds[i]!.priceMax,
+      quantityAvailable: 3,
+      leadTimeMinDays: 2,
+      leadTimeMaxDays: 5,
+      description: 'Placeholder seed listing — not a real offer.',
+    })),
+    ...[0, 3].map((i) => ({
+      partId: inserted[i]!.id,
+      supplierId: chinaSourced.id,
+      sku: `PLACEHOLDER-SKU-TK-${String(i + 1).padStart(4, '0')}`,
+      title: `${partSeeds[i]!.name}, tokunbo (placeholder)`,
+      condition: 'used_tokunbo' as const,
+      stockModel: 'pre_order' as const,
+      status: 'active' as const,
+      retailPrice: partSeeds[i]!.priceMin,
+      quantityAvailable: 0,
+      leadTimeMinDays: 21,
+      leadTimeMaxDays: 45,
+      description: 'Placeholder seed listing — not a real offer.',
+      fitmentNote: 'Pulled part. Condition graded on arrival before dispatch.',
+    })),
+  ];
+
+  const listings = await db.insert(t.listings).values(listingRows).returning();
+
+  // Every price is an entry in the ledger, including the first one.
+  await db.insert(t.listingPriceChanges).values(
+    listings.map((listing) => ({
+      listingId: listing.id,
+      previousPrice: null,
+      newPrice: listing.retailPrice,
+      reason: 'Initial placeholder seed price.',
+      changedBy: 'seed',
+    })),
+  );
+
+  // Collection points. Addresses are deliberately not plausible: an invented
+  // street that resolves to a real place is worse than an obvious placeholder.
+  await db.insert(t.pickupPoints).values([
+    {
+      code: 'PLACEHOLDER-LAG-01',
+      name: 'Placeholder counter, Lagos',
+      line1: 'PLACEHOLDER — no real address',
+      city: 'Lagos',
+      state: 'Lagos',
+      openingHours: 'Mon–Sat 9am–6pm',
+      displayOrder: 1,
+      notes: 'Placeholder seed pickup point.',
+    },
+    {
+      code: 'PLACEHOLDER-ABJ-01',
+      name: 'Placeholder counter, Abuja',
+      line1: 'PLACEHOLDER — no real address',
+      city: 'Abuja',
+      state: 'FCT — Abuja',
+      openingHours: 'Mon–Fri 9am–5pm',
+      displayOrder: 2,
+      notes: 'Placeholder seed pickup point.',
+    },
+  ]);
+
   await db.insert(t.waitlistEntries).values([
     { email: 'seed-facelift@example.com', source: 'facelift_hub' },
     { email: 'seed-accessories@example.com', source: 'accessories_store' },
   ]);
 
   console.warn(
-    `Seeded ${zones.length} zones, 3 vehicle variants, ${inserted.length} placeholder parts.`,
+    `Seeded ${zones.length} zones, 3 vehicle variants, ${inserted.length} placeholder parts, ` +
+      `${listings.length} placeholder listings across 2 suppliers.`,
   );
 }
 

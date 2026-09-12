@@ -48,3 +48,88 @@ export const priceSourceSchema = z.enum([
   'manual_entry',
 ]);
 export type PriceSource = z.infer<typeof priceSourceSchema>;
+
+/* ------------------------------------------------------------- commerce -- */
+
+/**
+ * How sure we are that a part fits a particular car. `probable` is a real,
+ * displayed answer — "this should fit, we have not confirmed it on your
+ * chassis" — and must never be rendered as if it were `confirmed`. `unknown`
+ * means we hold no fitment record for that vehicle at all.
+ */
+export const fitmentConfidenceSchema = z.enum(['confirmed', 'probable', 'unknown']);
+export type FitmentConfidence = z.infer<typeof fitmentConfidenceSchema>;
+
+/** Held stock ships in days; pre-order is sourced and lands in weeks. */
+export const stockModelSchema = z.enum(['held_stock', 'pre_order']);
+export type StockModel = z.infer<typeof stockModelSchema>;
+
+export const listingStatusSchema = z.enum(['draft', 'active', 'out_of_stock', 'archived']);
+export type ListingStatus = z.infer<typeof listingStatusSchema>;
+
+export const supplierStatusSchema = z.enum(['active', 'paused', 'archived']);
+export type SupplierStatus = z.infer<typeof supplierStatusSchema>;
+
+/** Door delivery and pickup coexist; neither is the default. */
+export const fulfilmentMethodSchema = z.enum(['delivery', 'pickup']);
+export type FulfilmentMethod = z.infer<typeof fulfilmentMethodSchema>;
+
+/** `customs` is a named state because a stall must look stalled, not broken. */
+export const orderStatusSchema = z.enum([
+  'awaiting_payment',
+  'paid',
+  'sourcing',
+  'in_transit',
+  'customs',
+  'ready_for_pickup',
+  'out_for_delivery',
+  'delivered',
+  'cancelled',
+  'refunded',
+]);
+export type OrderStatus = z.infer<typeof orderStatusSchema>;
+
+export const orderEventTypeSchema = z.enum([
+  'placed',
+  'payment_initialized',
+  'payment_succeeded',
+  'payment_failed',
+  'supplier_ordered',
+  'shipped',
+  'arrived_port',
+  'customs_started',
+  'customs_delayed',
+  'customs_cleared',
+  'ready_for_pickup',
+  'out_for_delivery',
+  'delivered',
+  'cancelled',
+  'refund_initiated',
+  'refunded',
+  'note',
+]);
+export type OrderEventType = z.infer<typeof orderEventTypeSchema>;
+
+export const paymentStatusSchema = z.enum([
+  'initialized',
+  'pending',
+  'success',
+  'failed',
+  'abandoned',
+  'reversed',
+]);
+export type PaymentStatus = z.infer<typeof paymentStatusSchema>;
+
+export const paymentChannelSchema = z.enum([
+  'card',
+  'bank_transfer',
+  'ussd',
+  'bank',
+  'qr',
+  'mobile_money',
+  'unknown',
+]);
+export type PaymentChannel = z.infer<typeof paymentChannelSchema>;
+
+export const cartStatusSchema = z.enum(['active', 'ordered', 'abandoned']);
+export type CartStatus = z.infer<typeof cartStatusSchema>;

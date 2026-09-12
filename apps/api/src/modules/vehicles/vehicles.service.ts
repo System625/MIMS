@@ -48,6 +48,10 @@ export class VehiclesService {
         // what a user who does not know their trim will land on.
         trim: null,
         engine: null,
+        // Left null deliberately: a chassis code is a fitment fact, and this file
+        // is a stub. Inventing a plausible one is exactly the failure the AI
+        // boundary forbids — it comes from the catalogue or it stays empty.
+        chassisCode: null,
         bodyStyle: 'Sedan',
       },
     ]);
