@@ -288,18 +288,27 @@ Use this to check nothing has regressed. Everything below runs on mock data.
 
 ### The test data
 
-| To get                  | Use                                                      |
-| ----------------------- | -------------------------------------------------------- |
-| A successful VIN decode | `JTDBR32E030123456` — the only VIN that resolves         |
-| A failed VIN decode     | Any other 17 valid characters, e.g. `JTDBR32E030999999`  |
-| A fully covered car     | Toyota → Corolla (the demo car, richest data)            |
-| An uncovered car        | **Peugeot** or **Innoson** — any model                   |
-| A sign-in code          | Any six digits. Nothing is checked.                      |
-| An estimate reference   | Any string. `/e/MI-4471` and `/e/ANYTHING` are the same. |
+| To get                   | Use                                                                                                                                    |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| A successful VIN decode  | `JTDBR32E030123456` — the only VIN that resolves                                                                                       |
+| A failed VIN decode      | Any other 17 valid characters, e.g. `JTDBR32E030999999`                                                                                |
+| A fully covered car      | Toyota → Corolla (the demo car, richest data)                                                                                          |
+| An uncovered car         | **Peugeot** or **Innoson** — any model                                                                                                 |
+| A sign-in code           | Any six digits. Nothing is checked.                                                                                                    |
+| An estimate reference    | Any string. `/e/MI-4471` and `/e/ANYTHING` are the same.                                                                               |
+| An order                 | `MO-2211` (stalled in customs), `MO-2214` (just placed, unpaid), `MO-2209` (mid-ocean), `MO-2205` (ready to collect), `MO-2196` (done) |
+| The phone that opens one | `08000000000` — all five placeholder orders share it                                                                                   |
 
-State lives in `localStorage` under `mims.estimate.v1`. **To start genuinely
-clean, clear site data** — otherwise your last car and damage list are still
-there, which is deliberate (the slow-connection screen promises exactly that).
+State lives in `localStorage` under `mims.estimate.v1`, the basket under
+`mims.cart.v1`, and the orders this device has opened under `mims.orders.v1`.
+**To start genuinely clean, clear site data** — otherwise your last car and
+damage list are still there, which is deliberate (the slow-connection screen
+promises exactly that).
+
+Orders are guest-only: `/orders/MO-2211` will not show you anything until you
+give the phone number above, and it asks for it whether or not the reference is
+real, so the page cannot be used to discover which references exist. `/orders`
+lists the five placeholders with a link into each.
 
 ### The store — the front door
 
@@ -516,10 +525,19 @@ and today's in-memory stand-in honestly refuses every reference. Set
 `PAYSTACK_SECRET_KEY` (test keys are fine) and the routes work; leave it unset
 and they refuse rather than half-work.
 
-**Does not exist:** order placement and tracking, the admin dashboard, API
-wiring, listing photographs (the storage and delivery for them exist — see §3),
-and `apple-icon.png` (Apple touch icons can't be SVG, so it needs a rasterised
-export).
+**Does not exist:** order PLACEMENT (tracking, confirmation and history are
+built, on placeholder orders — item 7), a published support channel of any kind,
+the admin dashboard, API wiring, listing photographs (the storage and delivery
+for them exist — see §3), and `apple-icon.png` (Apple touch icons can't be SVG,
+so it needs a rasterised export).
+
+**The missing support channel is worth calling out separately.** There is no
+phone number, WhatsApp line or address anywhere in this repository, and the
+tracking screen is where its absence costs most: a customer who has prepaid for
+a part stuck in customs has nowhere to go. `SUPPORT_CHANNEL` in
+`components/order-tracking.tsx` is the seam — set it and every escalation block
+comes alive; leave it null and they say plainly that there is no line yet, which
+is at least true. It is a founder's call, not a build task.
 
 ### Two gaps the design opened — closed with item 1
 
@@ -539,8 +557,13 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 
 Ten items, worked **two per session**. Order matters — schema before screens.
 
-**Done: 1, 2, 3, 4. Next session takes 5 and 6** — the cart, then checkout
-and Paystack.
+**Done: 1–8. Next session takes 9 and 10** — the returns policy and trust
+surfaces, then API wiring and admin.
+
+**The store now runs end to end on mock data**: browse, product, cart, checkout,
+order tracking and order history, plus the estimator's pivot into the basket.
+The two stops are the pay button, which says payment is not open rather than
+spinning, and the orders themselves, which are placeholders until item 10.
 
 1. ~~**Commerce schema and contracts**~~ — **done.** `suppliers`, `listings`
    (+ photos, + an append-only retail price ledger), `addresses`, `pickup_points`,
@@ -609,11 +632,54 @@ and Paystack.
    (§3), so a delivery order says plainly that we cannot total it yet while
    pickup totals exactly; and the pay button validates everything and then says
    payment is not open, because orders do not reach the database until item 10.
-7. **Confirmation, tracking, order history** — through to customs clearance,
-   which stalls unpredictably and must not look broken when it does.
-   **Next session starts here, with item 8.**
-8. **Estimator → cart** — keeping the WhatsApp and PDF exits. The partial
-   coverage case needs explicit handling.
+7. ~~**Confirmation, tracking, order history**~~ — **done.** `/orders` and
+   `/orders/[reference]`, on placeholder orders until item 10. The screen's real
+   subject is not events, it is SILENCE: a prepaid customer whose order stops
+   emitting updates cannot tell the difference between customs and being robbed.
+   So every stage says how long it has been quiet and whether that is normal
+   there — sea freight's three weeks of nothing is named as the crossing itself,
+   and a stall past its allowance turns the block orange and says somebody should
+   be chasing it. No promised date anywhere. Stages that cannot happen are not
+   drawn: held stock gets a four-step rail with no customs step to worry about,
+   a sourced part gets seven. Confirmation is a STATE of this page rather than a
+   separate one, because the screen you land on after paying is the screen you
+   come back to for five weeks.
+   **Order history without accounts:** the reference plus the phone it was placed
+   with, and `lib/orders.tsx` keeps a keyring of the ones this device has been
+   shown — the reference and four digits, nothing more. Two security choices: the
+   gate is checked BEFORE the order is resolved, so an unknown device gets the
+   lookup form whether or not the reference is real; and the lookup returns one
+   failure for both halves, because "that reference exists, the number is wrong"
+   hands an attacker the fact they were missing. The real endpoint needs a rate
+   limit on top, which is item 10's.
+   **Placeholder orders are pickup-only**, for the §3 reason that stops
+   `/checkout` totalling a delivery order: no logistics partner, so no derivable
+   fee, so none invented. Prices, names, numbers and fitment grades are read out
+   of the catalogue rather than typed into `mock/orders.ts`.
+   Also fixed here: `nigerianPhoneSchema` rejected `0803 123 4567` — the format
+   its own error message recommends — which broke `/checkout` too. Separators are
+   now accepted.
+8. ~~**Estimator → cart**~~ — **done.** `/estimate/buy`, and a screen rather than
+   a button because **"add to cart" must never silently mean "add the four we
+   could price"**. An estimate is a list of parts a car needs; a basket is a list
+   of things we can sell, and a five-zone estimate routinely contains a part we
+   can name, number and confirm the fitment of and hold no priced offer for. Both
+   groups are counted in the heading and the gaps are printed with their part
+   numbers, which is what is still useful to somebody who now has to buy that
+   piece elsewhere.
+   It also has to explain that an estimate is a RANGE and a basket is a PRICE:
+   where the canvas tags a part "aftermarket & genuine" both listings are offered
+   with prices and lead times, the estimate's own assumption starts selected, and
+   the summary prints the two figures side by side. A line already in the basket
+   starts unticked so a revisit cannot double an order; changing its grade
+   re-enables it. The join between the two catalogues is the part number with
+   punctuation stripped, falling back to an exact name for the rows the canvas
+   never numbered.
+   The WhatsApp and PDF exits are untouched on `/estimate` and repeated on the
+   buy screen. **Open design call:** the buy panel and the WhatsApp button are now
+   two orange primaries on `/estimate`; whether WhatsApp steps down to ink after
+   the pivot is the founder's to say.
+   **Next session starts at item 9.**
 9. **Returns policy and trust surfaces** — FCCPC-compliant. Plus the three
    coming-soon category pages; `waitlist_source` needs a third enum value.
 10. **API wiring and admin** — replace `apps/web/src/mock/*` with real queries;
