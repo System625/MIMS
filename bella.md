@@ -315,8 +315,9 @@ vehicle context, and it is the store's spine.
    to both.
 3. Set an uncovered car (**Peugeot** → 508) and the band adds a NOT PRICED YET
    flag rather than pretending.
-4. Every link on the page must go somewhere real. `/parts` is a holding page
-   until build-plan item 3 and says so plainly.
+4. Every link on the page must go somewhere real. Nothing in the store is a
+   holding page any more: `/parts`, `/parts/[slug]`, `/cart` and `/checkout` are
+   all built. The only stop is the pay button, which says so rather than spinning.
 
 ### The main flow — do this first
 
@@ -378,17 +379,19 @@ real components in the real flow, not illustrations:
 
 ### The rest of the screens
 
-| Route                                    | What to check                                                                                                  |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `/photos`                                | Three stages: guide → upload → review. SKIP is visible at every stage and never blocks the estimate.           |
-| `/e/MI-4471`                             | The read-only view a mechanic opens. No app chrome to get lost in.                                             |
-| `/estimate/MI-4471/share`                | WhatsApp message and A4 PDF side by side. **Print this page** (⌘P) — it should come out as one clean page.     |
-| `/signin`                                | Phone/email tabs, six digits, and the "just give me the WhatsApp link" escape. Account is optional throughout. |
-| `/account/settings`                      | Leads with the garage, not profile details.                                                                    |
-| `/account/estimates`                     | Saved estimates with staleness banners. A header link toggles the empty state.                                 |
-| `/estimate/MI-4471/feedback`             | "Was the price right?" Answering "about right" should be ~4 taps with no amount asked.                         |
-| `/coverage`, `/how-we-price`, `/privacy` | Read them. They are the pages that make the numbers arguable.                                                  |
-| `/parts`                                 | The browse holding page. It should say it is not open yet, not show an empty result set.                       |
+| Route                                    | What to check                                                                                                                                          |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/photos`                                | Three stages: guide → upload → review. SKIP is visible at every stage and never blocks the estimate.                                                   |
+| `/e/MI-4471`                             | The read-only view a mechanic opens. No app chrome to get lost in.                                                                                     |
+| `/estimate/MI-4471/share`                | WhatsApp message and A4 PDF side by side. **Print this page** (⌘P) — it should come out as one clean page.                                             |
+| `/signin`                                | Phone/email tabs, six digits, and the "just give me the WhatsApp link" escape. Account is optional throughout.                                         |
+| `/account/settings`                      | Leads with the garage, not profile details.                                                                                                            |
+| `/account/estimates`                     | Saved estimates with staleness banners. A header link toggles the empty state.                                                                         |
+| `/estimate/MI-4471/feedback`             | "Was the price right?" Answering "about right" should be ~4 taps with no amount asked.                                                                 |
+| `/coverage`, `/how-we-price`, `/privacy` | Read them. They are the pages that make the numbers arguable.                                                                                          |
+| `/parts`                                 | Search and browse. The vehicle grades rows rather than hiding them; `fitsOnly` reports what it hid.                                                    |
+| `/cart`                                  | Add two parts, then **change your car in the band**. The basket must re-grade, never empty. Clear the car and every line says so.                      |
+| `/checkout`                              | Submit it empty — every message must be a sentence, not a Zod string. Switch to **Deliver it**: there is no postcode box and no invented delivery fee. |
 
 ### Responsive
 
@@ -498,16 +501,22 @@ be mistaken for one another.
 - `apps/admin` renders only the scaffold's API health panel.
 
 **Also built:** the marketplace home at `/`, the persistent vehicle-context band,
-search and browse at `/parts`, product detail at `/parts/[slug]`, and the whole
-commerce schema and its contracts. None of the commerce tables has a route in
-front of it yet — the store runs on `apps/web/src/mock/listings.ts`, and wiring
-it to Postgres is item 10.
+search and browse at `/parts`, product detail at `/parts/[slug]`, the cart at
+`/cart`, checkout at `/checkout`, and the whole commerce schema and its
+contracts. None of the commerce tables has a route in front of it yet — the store
+runs on `apps/web/src/mock/listings.ts` and `mock/cart.ts`, and wiring it to
+Postgres is item 10. The store has no holding pages left.
 
-`/cart` is now the store's one holding page, standing in for item 5 so the
-product screen's buy button is not a dead link — the same job `/parts` did while
-item 2 shipped.
+**Payments are the exception to "screens first".** `apps/api/src/modules/payments`
+is a working, tested Paystack integration — initialize, server-side verify, and a
+raw-body HMAC-SHA512 webhook — built at item 6 rather than deferred to item 10,
+because a checkout that trusts the redirect is not a smaller version of a correct
+one. It has no orders to attach to yet: `OrderPaymentsRepository` is the seam,
+and today's in-memory stand-in honestly refuses every reference. Set
+`PAYSTACK_SECRET_KEY` (test keys are fine) and the routes work; leave it unset
+and they refuse rather than half-work.
 
-**Does not exist:** the cart, checkout, order tracking, the admin dashboard, API
+**Does not exist:** order placement and tracking, the admin dashboard, API
 wiring, listing photographs (the storage and delivery for them exist — see §3),
 and `apple-icon.png` (Apple touch icons can't be SVG, so it needs a rasterised
 export).
@@ -569,12 +578,40 @@ and Paystack.
    **The photography half of §3 is now settled** — R2 for the bytes, Cloudflare
    Images for delivery — so the frame, its drawn state and the delivery pipeline
    are all built. Who takes the photographs is still the founder's call.
-5. **Cart** — line snapshots, per-line fitment recheck, mixed lead times.
-   Replaces the `/cart` holding page. **Next session starts here, with item 6.**
-6. **Checkout and Paystack** — guest checkout, phone as identity, delivery or
-   pickup, Nigerian address shape, server-side verify and signed webhooks.
+5. ~~**Cart**~~ — **done.** At `/cart`, replacing the holding page. The basket
+   lives on the device (`lib/cart.tsx`) until item 10, on one rule: **snapshot
+   the identity, derive the volatile.** Name, number, grade, SKU and stock model
+   are frozen at add — that is what the customer read, and all a line can still
+   say once its listing is withdrawn. Price, fitment, lead time and availability
+   are looked up fresh on every read, because a cart that remembers a price
+   cannot notice the price has moved. `priceAtAdd` and `fitmentAtAdd` sit across
+   that line deliberately, kept for comparison so a re-priced line shows both
+   figures. Changing the car re-grades the basket rather than emptying it; mixed
+   lead times get two answers and the option to split; a withdrawn line keeps its
+   part number, leaves the total, and carries no fitment grade at all.
+   `mock/cart.ts` is the placeholder for `GET /api/v1/cart` and is
+   contract-shaped, so item 10 deletes it and changes no screen.
+6. ~~**Checkout and Paystack**~~ — **done, in two halves that meet at item 10.**
+   `/checkout` is guest checkout — no account, phone as identity, pickup listed
+   first as a peer of delivery, and a Nigerian address shape with no postcode
+   field and landmark given its own row. Validation is built from the contract
+   schemas, so a form that passes in the browser cannot be rejected by the API
+   for a different reason, and unconfirmed fitment is acknowledged in writing
+   before payment.
+   **`apps/api/src/modules/payments` is real and tested**: server-side verify,
+   `data.status` and never the envelope, amount and currency compared in minor
+   units, idempotent settlement, and an HMAC-SHA512 webhook over the **raw** body
+   (`main.ts` boots Nest with `rawBody: true`). The signed body is still not the
+   evidence — the handler re-verifies, so exactly one code path can pay an order.
+   25 tests run with no network or database; the API gained a `test` script.
+   `OrderPaymentsRepository` is the seam item 10 implements against Postgres.
+   **Two things the screen refuses to invent:** no logistics partner is chosen
+   (§3), so a delivery order says plainly that we cannot total it yet while
+   pickup totals exactly; and the pay button validates everything and then says
+   payment is not open, because orders do not reach the database until item 10.
 7. **Confirmation, tracking, order history** — through to customs clearance,
    which stalls unpredictably and must not look broken when it does.
+   **Next session starts here, with item 8.**
 8. **Estimator → cart** — keeping the WhatsApp and PDF exits. The partial
    coverage case needs explicit handling.
 9. **Returns policy and trust surfaces** — FCCPC-compliant. Plus the three
