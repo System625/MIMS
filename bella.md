@@ -56,16 +56,17 @@ and it is not what we are building.
 
 Settled with the founder. Don't reopen these without going back to them.
 
-| Question          | Decision                                                                                                                             |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| Marketplace model | Middleman / consignment. We are the merchant of record.                                                                              |
-| Currency          | **NGN only** for the MVP. No switcher, no "West Africa" framing yet.                                                                 |
-| Payments          | **Paystack.** Card, bank transfer, USSD and bank account all exist — design for all four, not just card.                             |
-| Fulfilment        | Door delivery **and** pickup from a collection point, coexisting. Neither defaults.                                                  |
-| Estimator ending  | Pivots to **cart**. The WhatsApp and PDF exits stay.                                                                                 |
-| Stock             | Build something that **tolerates both** models — held stock and pre-order against a supplier. Lead time is a range, not a promise.   |
-| Pricing           | **Duty-inclusive.** One all-in Naira price. Delivery shown separately. Nothing appears for the first time on the last step.          |
-| Listing images    | **Cloudflare R2** holds the bytes; **Cloudflare Images** transformations deliver them. One key in the database, resized at the edge. |
+| Question          | Decision                                                                                                                                                          |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Marketplace model | Middleman / consignment. We are the merchant of record.                                                                                                           |
+| Currency          | **NGN only** for the MVP. No switcher, no "West Africa" framing yet.                                                                                              |
+| Payments          | **Paystack.** Card, bank transfer, USSD and bank account all exist — design for all four, not just card.                                                          |
+| Fulfilment        | Door delivery **and** pickup from a collection point, coexisting. Neither defaults.                                                                               |
+| Estimator ending  | Pivots to **cart**. The WhatsApp and PDF exits stay.                                                                                                              |
+| Stock             | Build something that **tolerates both** models — held stock and pre-order against a supplier. Lead time is a range, not a promise.                                |
+| Pricing           | **Duty-inclusive.** One all-in Naira price. Delivery shown separately. Nothing appears for the first time on the last step.                                       |
+| Listing images    | **Cloudflare R2** holds the bytes; **Cloudflare Images** transformations deliver them. One key in the database, resized at the edge.                              |
+| Vehicle imagery   | **Curated photographs for the cars we price, drawings for the ones we do not.** One image per GENERATION, not per model year. No car is ever pictured by a guess. |
 
 That last one is the important one. A customs surprise on arrival would destroy
 exactly the trust the estimator was built to earn.
@@ -567,7 +568,11 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 
 ## 12. The build plan
 
-Ten items, worked **two per session**. Order matters — schema before screens.
+Twelve items, worked **two per session**. Order matters — schema before screens.
+
+Items 11 and 12 were added on 2026-09-14 from the founder's own note of that
+date, and are the NEXT session's pair. They do not displace the rest of item 10 —
+the database still comes first the moment there is one.
 
 **Done: 1–9. Item 10 is HALF done** — order placement is built and tested,
 nothing has been run against a database, `apps/web` is still on mocks, and admin
@@ -792,6 +797,87 @@ spinning, and the orders themselves, which are placeholders until item 10.
       missing, and the structured fields come back null rather than being joined
       live, which would break "orders are snapshots". The fix is additive
       columns on `orders`, and it belongs with the admin work.
+
+11. **The garage — cars as the front door.** Planned 2026-09-14, not started.
+    The founder's observation, and it is correct: this store opens on a wall of
+    parts nobody can name, and every competitor does the same. The fix is to
+    open on CARS. A grid of vehicles a Nigerian owner recognises on sight,
+    tapped to set the context, and only then parts. It is the garage pattern —
+    eBay Motors and Amazon both run it — and three quarters of the parts already
+    exist here: `vehicle-context.tsx` holds a car, `estimate-flow.tsx` persists
+    it, and `ResolvedVehicle.chassisCode` is the key that makes a generation-
+    correct picture possible at all.
+    **The fleet is the covered makes only** — Toyota, Honda, Nissan,
+    Mercedes-Benz, Hyundai, Kia, Lexus, drawn from `mock/vehicles.ts`. Peugeot
+    and Innoson are deliberately NOT tiles. They keep the coverage-gap route
+    they already have: tell us what you drive and we will price it. A tile is a
+    promise that we sell parts for that car, and the one thing this store does
+    not do is imply a catalogue it does not hold.
+    **The imagery rule, which is the whole risk in this item.** A photograph of
+    a car is not a claim about a part — which is why this is safer ground than
+    listing photography — but a photograph of the WRONG GENERATION is a fitment
+    claim wearing a disguise, and fitment is the product. So:
+    - One image per generation, stamped with the chassis code the tile resolves
+      to. Not one per model year. `mock/vehicles.ts` already thinks in ranges
+      (`2014–2018`) for exactly this reason: one range is one set of part
+      numbers.
+    - Photographs come from **Wikimedia Commons, which files cars by generation
+      code** — `E140`, `E170`, `N17` — under CC BY / CC BY-SA. Re-hosted in R2
+      and served through the `lib/images.ts` path, never hot-linked. The
+      licences need an attribution page; build it with the images, not after.
+    - **No commercial car-image API.** This was tested rather than assumed on
+      2026-09-14 and the free tier fails three ways: images come back
+      watermarked, `modelYear` is ignored (a 2018 and a 2008 Corolla returned
+      the identical current-generation car), and an unknown vehicle returns a
+      confident photograph of something else — `innoson ivm g5` produced a boxy
+      off-roader, because the CDN answers with an ML "closest match" rather than
+      an error. A silent wrong car is the visual form of the invented part
+      number §10 forbids. The paid tier honours the year and stays on the table
+      for when the fleet outgrows hand-curation; at 12–20 tiles it has not.
+    - **v1 crops to a consistent plate; it does not fake studio isolation.**
+      Commons photographs stand in real streets and car parks. Cropping them to
+      one aspect on one panel is honest and shippable in an afternoon;
+      background-knocking twenty images to a studio white is a person with an
+      editor, or the paid API, and is not worth blocking on.
+    - **Uncovered cars and missing generations take a drawing**, the same
+      two-state discipline `listing-photo.tsx` already enforces: the states must
+      never be confusable, and the drawn one must never be mistakable for a
+      photograph of a specific car. `part-art.tsx` is the precedent and
+      `CarPlanArt` is the starting point.
+      **The garage is more than one car.** A mechanic works on several, and that
+      is the user this idea is aimed at. Keep `mims.estimate.v1` as the CURRENT
+      car — the estimator shares it and bumping the key would quietly empty
+      somebody's context — and add a second key for the saved list. A garage that
+      forgets is worse than no garage.
+
+12. **Car → zone → parts: the dissection route.** Planned 2026-09-14, not
+    started. The second half of the founder's idea: having put a whole car on
+    the screen, take it apart. **The interaction is already built** —
+    `zone-selector.tsx`'s plan view of nine body zones, made for the estimator,
+    and its own comment carries the reasoning that still holds: front, rear and
+    both sides are all reachable, no zone hides behind another, and the smallest
+    target stays a 62px cell rather than a hotspot on an illustration. The store
+    does not need a new component. It needs that one, pointed at the catalogue
+    instead of at a damage report.
+    What is genuinely new is a **zone → category map** — `front_bumper` to
+    `bumper`, `headlight_*` to `lighting`, `hood` and the fenders to
+    `body_panel`, and so on across the nine and the four `categoryCode`s in
+    `mock/listings.ts`. That mapping is data and belongs beside the zones.
+    **Every zone carries its count for the car in context**, and a zone we hold
+    nothing priced for draws EMPTY rather than leading somewhere apologetic —
+    the `/soon/accessories` precedent. A plan view whose cells all look alike
+    and half of which dead-end is worse than the list it replaced.
+    **No 3D, and this is recorded so it is not re-litigated.** It was costed on
+    2026-09-14. A 320px car photograph is ~20 KB; a Draco-compressed glTF car is
+    ~5 MB, which is Google's _ceiling_ for web assets, not a target. Against
+    Nigeria's ₦431/GB average that is ₦0.02 versus ₦2.16 per car looked at, on
+    a market led by Tecno and Infinix with Android Go phones that have no GPU
+    headroom for WebGL at all. And the payoff is not there: we sell nine body
+    zones, all of them on the outside of the car. A flat plan shows all nine at
+    once; a 3D model shows four and makes you drag for the rest. Even TecDoc,
+    which sells this problem for a living, answers it with 2D graphical
+    component selection. Revisit only if MIMS ever sells mechanical parts, where
+    geometry is genuinely the information.
 
 ### Design authority
 
