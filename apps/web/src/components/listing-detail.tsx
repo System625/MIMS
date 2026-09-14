@@ -12,11 +12,12 @@ import {
   listingBySlug,
   STOCK_LABEL,
 } from '@/mock/listings';
+import { AddToCart } from './add-to-cart';
 import { FitmentTable, FitmentVerdictPanel } from './fitment';
 import { leadTimeSentence } from './listing-row';
 import { ListingPhotoFrame } from './listing-photo';
 import { PartNumber } from './part-number';
-import { Button, Kicker, Note, Panel, PanelBar, QuantityStepper, StatCells, Title } from './ui';
+import { Kicker, Note, Panel, PanelBar, QuantityStepper, StatCells, Title } from './ui';
 
 /**
  * THE PRODUCT SCREEN — build plan item 4, and the screen the business lives or
@@ -342,14 +343,7 @@ export function ListingDetailScreen({ slug }: { slug: string }) {
                   </span>
                 </div>
 
-                <div className="mt-[13px] grid gap-[9px]">
-                  <Button variant="primary" size="lg" full href="/cart">
-                    Add to cart
-                  </Button>
-                  <Button variant="outline" size="md" full href="/parts">
-                    Keep looking
-                  </Button>
-                </div>
+                <AddToCart listing={listing} quantity={quantity} />
               </div>
             </Panel>
 

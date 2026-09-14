@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { CartLink } from '@/components/cart-link';
 import { AppHeader, PageHeading, Shell, SiteFooter } from '@/components/chrome';
 import { BrowseParts } from '@/components/browse';
 import { VehicleContext } from '@/components/vehicle-context';
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 export default function BrowsePartsPage() {
   return (
     <>
-      <AppHeader label="Parts store · Browse" meta="NGN · Duty included" />
+      <AppHeader label="Parts store · Browse" meta="NGN · Duty included" action={<CartLink />} />
       <VehicleContext />
 
       <main>

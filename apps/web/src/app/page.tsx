@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { CartLink } from '@/components/cart-link';
 import { AppHeader, PageHeading, Shell, SiteFooter } from '@/components/chrome';
 import { NotifyCapture } from '@/components/states';
 import {
@@ -41,7 +42,11 @@ export const metadata: Metadata = {
 export default function StoreHomePage() {
   return (
     <>
-      <AppHeader label="Parts store · Nigeria" meta="NGN · Duty included · Rev 2026.09" />
+      <AppHeader
+        label="Parts store · Nigeria"
+        meta="NGN · Duty included · Rev 2026.09"
+        action={<CartLink />}
+      />
       <VehicleContext />
 
       <main>

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { CartLink } from '@/components/cart-link';
 import { AppHeader, Shell, SiteFooter } from '@/components/chrome';
 import { ListingDetailScreen } from '@/components/listing-detail';
 import { VehicleContext } from '@/components/vehicle-context';
@@ -45,7 +46,7 @@ export default async function ListingPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <AppHeader label="Parts store · Part" meta="NGN · Duty included" />
+      <AppHeader label="Parts store · Part" meta="NGN · Duty included" action={<CartLink />} />
       <VehicleContext />
 
       <main>
