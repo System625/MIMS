@@ -8,7 +8,13 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  /*
+   * `rawBody` keeps the original request bytes alongside the parsed body. The
+   * Paystack webhook signature is an HMAC over exactly those bytes, and a body
+   * that has been parsed and re-serialised will never verify — see
+   * `modules/payments/paystack.signature.ts`.
+   */
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
   const config = app.get<ConfigService<Env, true>>(ConfigService);
 
   // Health sits outside the prefix so Railway's healthcheck path stays /health.

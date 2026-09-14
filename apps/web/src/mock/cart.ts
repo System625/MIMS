@@ -210,15 +210,39 @@ export function resolveCart(lines: readonly StoredLine[], vehicle: VehicleDetail
   };
 }
 
-/** `{ minDays: 21, maxDays: 45 }` → `"3–7 weeks"`. Days below a fortnight stay days. */
+/**
+ * A lead-time window in the unit a person would actually use.
+ *
+ * Short windows stay in days, long ones become weeks, and a window that spans
+ * both — which is exactly what a basket mixing shelf stock with a sourced part
+ * produces — is written in BOTH units rather than forced into one. Rounding
+ * `{ minDays: 2, maxDays: 45 }` to a single scale produces "0–6 weeks", and a
+ * delivery estimate that starts at zero weeks is the kind of detail that makes
+ * a customer stop believing the rest of the page.
+ */
 export function formatLeadTime(window: LeadTime): string {
+  const inDays = (days: number) => `${days} days`;
+  // Never round a real wait down to nothing: one day is "1 week", not "0 weeks".
+  const inWeeks = (days: number) => `${Math.max(1, Math.round(days / 7))} weeks`;
+
   if (window.maxDays <= 14) {
     return window.minDays === window.maxDays
-      ? `${window.maxDays} days`
+      ? inDays(window.maxDays)
       : `${window.minDays}–${window.maxDays} days`;
   }
-  const weeks = (days: number) => Math.round(days / 7);
-  const min = weeks(window.minDays);
-  const max = weeks(window.maxDays);
-  return min === max ? `${max} weeks` : `${min}–${max} weeks`;
+
+  if (window.minDays > 14) {
+    const min = Math.max(1, Math.round(window.minDays / 7));
+    const max = Math.max(1, Math.round(window.maxDays / 7));
+    return min === max ? `${max} weeks` : `${min}–${max} weeks`;
+  }
+
+  return `${inDays(window.minDays)} to ${inWeeks(window.maxDays)}`;
+}
+
+/** Just the far end — for the "up to …" sentence, where a range reads oddly. */
+export function formatLeadTimeCeiling(window: LeadTime): string {
+  return window.maxDays <= 14
+    ? `${window.maxDays} days`
+    : `${Math.max(1, Math.round(window.maxDays / 7))} weeks`;
 }

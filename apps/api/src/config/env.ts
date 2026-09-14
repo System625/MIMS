@@ -42,6 +42,23 @@ export const envSchema = z.object({
   /** NHTSA vPIC. Free and keyless; overridable so tests can point at a stub. */
   VPIC_BASE_URL: z.url().default('https://vpic.nhtsa.dot.gov/api'),
   VPIC_TIMEOUT_MS: z.coerce.number().int().default(6000),
+
+  /**
+   * PAYSTACK. Optional so the API boots without it — but every payment route
+   * then refuses, rather than half-working. The secret key is also the webhook
+   * signing key, which is why there is no separate webhook secret here.
+   */
+  PAYSTACK_SECRET_KEY: blankAsAbsent(z.string().startsWith('sk_')),
+  /** Safe to ship to the browser. Only needed if we ever move to inline checkout. */
+  PAYSTACK_PUBLIC_KEY: blankAsAbsent(z.string().startsWith('pk_')),
+  PAYSTACK_BASE_URL: z.url().default('https://api.paystack.co'),
+  PAYSTACK_TIMEOUT_MS: z.coerce.number().int().default(12_000),
+  /**
+   * Where a receipt goes for a guest who gave no email. Paystack requires an
+   * address on initialize; this makes the fallback a deliberate, routable choice
+   * rather than an invented address that bounces.
+   */
+  PAYSTACK_FALLBACK_EMAIL_DOMAIN: z.string().min(3).default('receipts.mims.ng'),
 });
 
 export type Env = z.infer<typeof envSchema>;

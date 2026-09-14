@@ -8,8 +8,8 @@
     "start": "node dist/main.js",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"No API tests yet\" && exit 0",
-    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+    "test": "tsc -p tsconfig.spec.json && node --test \".spec-build/**/*.spec.js\"",
+    "clean": "rm -rf dist .spec-build .turbo *.tsbuildinfo"
   },
   "dependencies": {
     "@mims/contracts": "workspace:*",

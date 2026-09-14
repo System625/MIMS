@@ -23,6 +23,8 @@ packages/*/dist/
 packages/*/build/
 packages/*/out/
 packages/*/coverage/
+apps/*/.spec-build/
+packages/*/.spec-build/
 
 .env
 .env.*

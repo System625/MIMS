@@ -89,7 +89,7 @@ export const addressInputSchema = z.object({
   /** "Opposite the second gate, after the mosque." Not decoration — this is how riders find you. */
   landmark: z.string().trim().max(200).optional(),
   area: z.string().trim().max(120).optional(),
-  city: z.string().trim().min(2).max(120),
+  city: z.string().trim().min(2, 'Which city or town?').max(120),
   state: nigerianStateSchema,
   deliveryNotes: z.string().trim().max(500).optional(),
 });

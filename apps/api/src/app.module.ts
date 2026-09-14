@@ -9,6 +9,7 @@ import { ZonesModule } from './modules/zones/zones.module';
 import { PartsModule } from './modules/parts/parts.module';
 import { EstimatesModule } from './modules/estimates/estimates.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { WaitlistModule } from './modules/waitlist/waitlist.module';
     PartsModule,
     EstimatesModule,
     WaitlistModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {}
