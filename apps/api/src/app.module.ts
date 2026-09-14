@@ -9,6 +9,7 @@ import { ZonesModule } from './modules/zones/zones.module';
 import { PartsModule } from './modules/parts/parts.module';
 import { EstimatesModule } from './modules/estimates/estimates.module';
 import { WaitlistModule } from './modules/waitlist/waitlist.module';
+import { OrdersModule } from './modules/orders/orders.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     PartsModule,
     EstimatesModule,
     WaitlistModule,
+    OrdersModule,
     PaymentsModule,
   ],
 })

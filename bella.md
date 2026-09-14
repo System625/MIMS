@@ -507,7 +507,7 @@ be mistaken for one another.
 - Sign-in accepts any six digits. There is no auth.
 - Every part number and price is placeholder data from the design canvas.
 - DOWNLOAD PDF relies on the browser's print dialog. There is no PDF generator.
-- `apps/admin` renders only the scaffold's API health panel.
+- `apps/admin` renders only the scaffold's API health panel. Still true after item 10, which deferred admin entirely.
 
 **Also built:** the marketplace home at `/`, the persistent vehicle-context band,
 search and browse at `/parts`, product detail at `/parts/[slug]`, the cart at
@@ -520,16 +520,25 @@ Postgres is item 10. The store has no holding pages left.
 is a working, tested Paystack integration — initialize, server-side verify, and a
 raw-body HMAC-SHA512 webhook — built at item 6 rather than deferred to item 10,
 because a checkout that trusts the redirect is not a smaller version of a correct
-one. It has no orders to attach to yet: `OrderPaymentsRepository` is the seam,
-and today's in-memory stand-in honestly refuses every reference. Set
-`PAYSTACK_SECRET_KEY` (test keys are fine) and the routes work; leave it unset
-and they refuse rather than half-work.
+one. Set `PAYSTACK_SECRET_KEY` (test keys are fine) and the routes work; leave it
+unset and they refuse rather than half-work. **Item 10 gave it orders to attach
+to**: `PostgresOrderPayments` replaced the in-memory stand-in on the single line
+item 6 said it would, and settlement is made idempotent by a conditional UPDATE
+(`WHERE status = 'awaiting_payment'`) rather than a read-then-write, so two
+concurrent deliveries of one charge cannot both write a payment row.
 
-**Does not exist:** order PLACEMENT (tracking, confirmation and history are
-built, on placeholder orders — item 7), a published support channel of any kind,
-the admin dashboard, API wiring, listing photographs (the storage and delivery
-for them exist — see §3), and `apple-icon.png` (Apple touch icons can't be SVG,
-so it needs a rasterised export).
+**`apps/api/src/modules/orders` is the other real module** — `POST /orders` and
+`POST /orders/lookup`, with the placement rules in the service and the SQL behind
+a port. It has never been run against a database. See item 10 in §12 for what
+that means and what is still owed.
+
+**Does not exist:** a published support channel of any kind, the admin dashboard
+and all four of its tools, listing photographs (the storage and delivery for them
+exist — see §3), and `apple-icon.png` (Apple touch icons can't be SVG, so it needs
+a rasterised export). **Order placement now exists in the API and nowhere else**:
+`apps/web` still reads `src/mock/*`, so no screen has been wired to it, and the
+queries behind it have never met a Postgres — item 10 in §12 is precise about the
+line between what is tested and what is merely typechecked.
 
 **The missing support channel is worth calling out separately.** There is no
 phone number, WhatsApp line or address anywhere in this repository, and it now
@@ -560,7 +569,9 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 
 Ten items, worked **two per session**. Order matters — schema before screens.
 
-**Done: 1–9. Item 10 is next** — API wiring and admin.
+**Done: 1–9. Item 10 is HALF done** — order placement is built and tested,
+nothing has been run against a database, `apps/web` is still on mocks, and admin
+has not been started. See item 10 for exactly what remains.
 
 **The store now runs end to end on mock data**: browse, product, cart, checkout,
 order tracking and order history, plus the estimator's pivot into the basket.
@@ -721,9 +732,66 @@ spinning, and the orders themselves, which are placeholders until item 10.
    accessories draws EMPTY SLOTS — we have not chosen that range, and
    illustrating one would be choosing it by accident. The ask comes last, after
    the explanation, and says what the address actually decides.
-10. **API wiring and admin** — replace `apps/web/src/mock/*` with real queries;
-    admin gets supplier management, the landed-cost calculator, a listing editor
-    and an order queue.
+10. **API wiring and admin** — **started 2026-09-14, NOT finished.** The half
+    that landed is ORDER PLACEMENT, which is the half that closes the store's
+    two remaining stops. `apps/api/src/modules/orders` is real: `POST /orders`
+    and `POST /orders/lookup`, a repository port with a Postgres implementation
+    behind it, and `PostgresOrderPayments` replacing the one line item 6 left
+    for exactly this. `apps/web` is UNCHANGED and still runs on its mocks.
+    **The four rules the service exists to enforce**, all tested:
+    - **The client never sends a price.** Look at `checkoutRequestSchema` — a
+      cart id, a name, a phone, a fulfilment choice, no amounts anywhere. Every
+      figure is computed from `listings.retailPrice` at placement, so a browser
+      that wants a ₦400,000 bumper for ₦100 has nothing to tamper with. Not a
+      check; a shape that makes the attack unexpressible.
+    - **A price past `priceValidUntil` is re-quoted, not sold.** We take money
+      weeks before goods land, so the FX gap is ours, and the catalogue already
+      has a column that says when a figure has aged out.
+    - **Unconfirmed fitment must be acknowledged before the money moves.**
+      `acceptsFitmentRisk` is checked against freshly derived fitment, and the
+      order does not exist without it. This is what lets `/returns` draw its
+      line where it does.
+    - **Price and fitment are re-derived, never copied off the cart.** Item 5's
+      rule with the stronger reason: the snapshot written onto `order_items` is
+      the one we will be asked to defend under the FCCPA six weeks later.
+      Also: one transaction for order + lines + `placed` event + cart closure, so
+      a double-submitted form cannot leave somebody owning two orders; random
+      seven-digit references rather than a counter, because a sequence publishes
+      how much business we did between two orders; the guest lookup resolving both
+      halves in ONE query so the failures cannot be told apart by timing; and the
+      rate limit item 7 said this item owed it — in-process, honestly documented
+      as per-container.
+      **`common/money.ts` is new and everything goes through it.** Naira as
+      `bigint` minor units, never a float; the Paystack adapter's kobo pair now
+      delegates to it, because two money conversions that drift by a kobo show up
+      as a gateway amount mismatch on a real customer's real order.
+      **What is NOT done, and is the rest of item 10:**
+    - **None of it has been run against a database.** There is no Postgres on
+      the machine it was written on, and that was the founder's call once the
+      alternative was made clear. The RULES are covered — 29 new tests, 54 in
+      the API — but the SQL in the two Postgres repositories is checked by types
+      and review and nothing else. First job next session: a database, then
+      `pnpm db:migrate && pnpm db:seed`, then walk a real order through.
+    - **`apps/web` still reads `src/mock/*`.** No screen changed and nothing
+      regressed; the client wiring waits on a database to point it at.
+    - **The other services are still placeholders** — parts, vehicles, zones,
+      estimates and waitlist all still return mock rows with TODOs on them.
+    - **Admin is untouched**, deferred by the founder on 2026-09-14. All four
+      tools — supplier management, landed-cost calculator, listing editor, order
+      queue — are still ahead, and the dashboard is still undesigned.
+    - **Delivery orders are refused by the API**, exactly as `/checkout` refuses
+      to total one, and for the §3 reason: no courier is signed, so no fee is
+      derivable, so none is invented. An order payable at a total with no
+      delivery in it would make the customer prepay and then be asked for more,
+      which is the one thing duty-inclusive pricing exists to prevent.
+      `resolveFulfilment` is the seam.
+    - **One contract gap, recorded not smoothed:** `orders` snapshots a pickup
+      point as code + name + one address string, while `pickupPointSchema`
+      wants it broken into line1, area, city, state, hours and a phone. The
+      printable address is what the screen shows so nothing a customer reads is
+      missing, and the structured fields come back null rather than being joined
+      live, which would break "orders are snapshots". The fix is additive
+      columns on `orders`, and it belongs with the admin work.
 
 ### Design authority
 

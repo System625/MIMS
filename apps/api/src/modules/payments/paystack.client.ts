@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { fromMinor, toMinor } from '../../common/money';
 import type { Env } from '../../config/env';
 
 /**
@@ -72,17 +73,21 @@ export type PaystackOutcome<T> =
   | { kind: 'rejected'; reason: string }
   | { kind: 'unavailable'; reason: string };
 
-/** `"186000.00"` → `18600000`. Integer arithmetic only; no float ever sees this. */
+/**
+ * `"186000.00"` → `18600000`. Integer arithmetic only; no float ever sees this.
+ *
+ * Kobo is the Naira's minor unit and also Paystack's own wire format, so the
+ * conversion is the shared one in `common/money.ts` and these two keep only the
+ * gateway's vocabulary. One implementation: two that drift by a kobo would show
+ * up as a gateway amount mismatch on a real customer's real order.
+ */
 export function nairaToKobo(decimal: string): number {
-  const [whole = '0', fraction = ''] = decimal.split('.');
-  const kobo = BigInt(whole) * 100n + BigInt(fraction.padEnd(2, '0').slice(0, 2));
-  return Number(kobo);
+  return Number(toMinor(decimal));
 }
 
 /** `18600000` → `"186000.00"`, for comparing a gateway amount against an order. */
 export function koboToNaira(kobo: number): string {
-  const value = BigInt(Math.trunc(kobo));
-  return `${value / 100n}.${String(value % 100n).padStart(2, '0')}`;
+  return fromMinor(BigInt(Math.trunc(kobo)));
 }
 
 /**

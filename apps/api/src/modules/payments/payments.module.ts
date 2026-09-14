@@ -1,18 +1,20 @@
 import { Module } from '@nestjs/common';
-import { InMemoryOrderPayments, OrderPaymentsRepository } from './order-payments.repository';
+import { OrderPaymentsRepository } from './order-payments.repository';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 import { PaystackClient } from './paystack.client';
 import { PaystackWebhookController } from './paystack-webhook.controller';
+import { PostgresOrderPayments } from './postgres-order-payments.repository';
 
 @Module({
   controllers: [PaymentsController, PaystackWebhookController],
   providers: [
     PaymentsService,
     PaystackClient,
-    /* Build plan item 10 swaps this one line for the Postgres-backed
-       implementation. Nothing else in the module changes. */
-    { provide: OrderPaymentsRepository, useClass: InMemoryOrderPayments },
+    /* Item 10 swapped this line, and only this line — exactly as item 6 said it
+       would. `InMemoryOrderPayments` is still in `order-payments.repository.ts`
+       and is still what the tests run against. */
+    { provide: OrderPaymentsRepository, useClass: PostgresOrderPayments },
   ],
   exports: [PaymentsService],
 })
