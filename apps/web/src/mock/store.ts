@@ -1,3 +1,4 @@
+import type { WaitlistSource } from '@mims/contracts';
 import type { PartArtKind } from '@/components/part-art';
 
 /**
@@ -60,21 +61,97 @@ export const STORE_CATEGORIES: readonly StoreCategoryCard[] = [
 ];
 
 /**
- * The two shelves that are not built yet. Both already have a `waitlist_source`
- * enum value behind them, so the capture is real even though the shelf is not.
+ * THE SHELVES THAT ARE NOT BUILT YET, one page each at `/soon/[shelf]`.
+ *
+ * Each has a `waitlist_source` enum value behind it, so the capture is real
+ * even though the shelf is not — `tokunbo_shelf` was added with build plan
+ * item 9 for exactly this.
+ *
+ * These are pages rather than two teaser boxes on the home page because of what
+ * `why` says on each one. Every shelf here is missing for a specific reason
+ * that is interesting to the customer — usually a fitment or a photography
+ * problem we have not solved rather than a shelf we have not got round to
+ * stocking — and "coming soon" over a picture tells them none of it. Asking for
+ * an email after explaining is a fairer trade than asking for one under a
+ * teaser, which is the version of this every other store ships.
  */
-export const COMING_SOON = [
+export interface ComingSoonShelf {
+  /** URL segment at `/soon/[shelf]`. */
+  slug: string;
+  /** The `waitlist_source` this shelf's captures are recorded under. */
+  source: WaitlistSource;
+  title: string;
+  /** One line, for the card on the home page. */
+  note: string;
+  lede: string;
+  /**
+   * Schematics for what the shelf will hold. EMPTY IS A REAL VALUE and draws
+   * empty slots — see `slotNote`. A shelf whose range we have not decided
+   * cannot be illustrated without deciding it by accident.
+   */
+  slots: readonly PartArtKind[];
+  slotNote: string;
+  /** Why it is not open. The reason is the point of the page. */
+  why: readonly string[];
+  /** What an address on this list actually decides. Not a marketing promise. */
+  signal: string;
+}
+
+export const COMING_SOON: readonly ComingSoonShelf[] = [
   {
-    source: 'facelift_hub' as const,
+    slug: 'facelift-kits',
+    source: 'facelift_hub',
     title: 'Facelift kits',
     note: 'Whole front ends — older shape to newer, matched as a set so the panels actually line up.',
+    lede: 'Converting an older car to the newer shape: bumper, grille, headlights and the brackets between them, bought as one matched set rather than assembled out of four separate guesses.',
+    slots: ['bumper', 'grille', 'lighting'],
+    slotNote:
+      'Three of the eight or so pieces a front-end conversion actually takes. The set is the product — buying them one at a time is how people end up with a car that is half converted.',
+    why: [
+      'A facelift kit is not a list of parts, it is one compatibility claim made across all of them at once. We can tell you a bumper fits your chassis. Telling you a 2018 front end fits your 2015 is a claim about mounting points, headlight connectors, wiring, washer jets and the line of the bonnet simultaneously, and being wrong about any single one of them strands you with a car in pieces.',
+      'That needs its own fitment data — conversion by conversion, confirmed on a real car — and it is not a filter over the catalogue we already hold. Selling it before we have that would be the store breaking its own rule on the most expensive thing it sells.',
+    ],
+    signal:
+      'Which conversion we build the data for first. Tell us the car you want converted and to what — that is the whole message.',
   },
   {
-    source: 'accessories_store' as const,
+    slug: 'tokunbo',
+    source: 'tokunbo_shelf',
+    title: 'Tokunbo parts',
+    note: 'Used, pulled from donor cars and graded. Named on every listing here, stocked on none of them yet.',
+    lede: 'The condition this market actually runs on. We name it on every listing, the browse filter carries it as its own axis, and it returns nothing — because a tokunbo part is a harder thing to sell honestly than a new one, not because we forgot.',
+    slots: ['bumper', 'body_panel', 'lighting'],
+    slotNote:
+      'The same parts as the rest of the catalogue. What is different is not the shape, it is that each one is a specific object with its own history.',
+    why: [
+      'A new part is a catalogue line: one number, one price, any of them will do. A tokunbo part is a single specific object — this bumper, off this car, with this scuff on the lower left — and the price follows the condition of that one piece. There is no honest way to list it as a line item with a stock figure.',
+      'So every tokunbo listing needs its own photographs and its own grade before it can go up, and we do not photograph anything yet. That is the same open question as the illustrative stock images on the rest of the store, and it is the one blocking this shelf outright rather than merely embarrassing us.',
+    ],
+    signal:
+      'Which parts to buy in first. A donor car is bought whole, so the list decides what we go looking for at the yard.',
+  },
+  {
+    slug: 'accessories',
+    source: 'accessories_store',
     title: 'Accessories',
     note: 'Mats, covers, mirrors, badges. The things you buy because you want them, not because something broke.',
+    lede: 'The shelf for the car you are keeping rather than the car you have just damaged. Easy to stock, and deliberately last.',
+    slots: [],
+    slotNote:
+      'Drawn empty on purpose. We have not decided what goes in these, and a picture of a range we have not chosen would be us choosing it by accident.',
+    why: [
+      'It is the easiest shelf here to fill and the least like the rest of the store. Almost nothing on it needs a chassis code, a fitment verdict or a landed-cost calculation — it would be the first thing we sell the ordinary way, and we would rather finish the hard half first and be worth trusting on it.',
+      'Badges are their own problem. We will not put another manufacturer\u2019s mark on something that is not their part, which is a rule that rules out most of what a shelf like this usually carries, so it opens narrower than you would expect or it does not open.',
+    ],
+    signal:
+      'Whether this is worth doing at all. It is the shelf we are least sure anyone wants from us specifically.',
   },
-] as const;
+];
+
+/** Looked up by the `/soon/[shelf]` route. */
+export function shelfBySlug(slug: string): ComingSoonShelf | undefined {
+  return COMING_SOON.find((shelf) => shelf.slug === slug);
+}
 
 /** How buying works, in the order a customer experiences it. */
 export const HOW_BUYING_WORKS = [

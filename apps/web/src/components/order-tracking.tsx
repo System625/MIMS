@@ -4,6 +4,8 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { OrderStatus } from '@mims/contracts';
 import { useKnownOrders } from '@/lib/orders';
+import { RETURNS_HREF } from '@/lib/returns';
+import { SUPPORT_CHANNEL } from '@/lib/support';
 import { formatNaira, formatStampDate } from '@/lib/money';
 import { formatLeadTime } from '@/mock/cart';
 import { CONDITION_LABEL, STOCK_LABEL } from '@/mock/listings';
@@ -52,19 +54,6 @@ import { Button, cx, FactRows, Kicker, Note, Panel, PanelBar, Title } from './ui
  *    thank-you page that cannot also answer "where is it" is a page nobody
  *    bookmarks and everybody phones about.
  */
-
-/**
- * WHERE A CUSTOMER REACHES A PERSON — and today, nowhere.
- *
- * MIMS has no published support number, WhatsApp line or address. On a page
- * whose entire job is reassuring somebody who has prepaid a stranger, that is
- * the single most important thing missing, and it is a founder's call rather
- * than a build task — so it is a null here with a seam around it, not an
- * invented number. Set it and every escalation block on this screen comes
- * alive; leave it and they say plainly that there is no line yet, which is at
- * least true.
- */
-const SUPPORT_CHANNEL: { label: string; href: string } | null = null;
 
 export function OrderTrackingScreen({ reference }: { reference: string }) {
   const { knows, hydrated, remember, forget } = useKnownOrders();
@@ -574,7 +563,11 @@ function IfSomethingIsWrong({
           our cost — you are entitled to a replacement or a refund under the Federal Competition and
           Consumer Protection Act whatever any policy says, and we do not argue about it. A part
           that simply does not fit is the harder case, and what we claimed about fitment is printed
-          above, unedited, for exactly that conversation.
+          above, unedited, for exactly that conversation.{' '}
+          <Link href={RETURNS_HREF} className="text-flag-deep underline">
+            What we do in each case
+          </Link>
+          .
         </p>
 
         {SUPPORT_CHANNEL ? (

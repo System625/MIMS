@@ -8,6 +8,7 @@ import { CONDITION_LABEL, STOCK_LABEL } from '@/mock/listings';
 import { formatLeadTime, resolveCart, type CartItemView, type CartView } from '@/mock/cart';
 import { chipState, FitmentChip } from './fitment';
 import { ListingPhotoFrame } from './listing-photo';
+import { ReturnsPosition } from './returns-position';
 import { Button, Kicker, Note, Panel, PanelBar, QuantityStepper, Title, cx } from './ui';
 
 /**
@@ -377,6 +378,11 @@ function CartSummary({ cart, hasVehicle }: { cart: CartView; hasVehicle: boolean
           the whole basket is re-checked in place.
         </Note>
       ) : null}
+
+      {/* Under the total, because this is the question somebody asks themselves
+          in the pause before pressing Checkout, and the answer should not be
+          one page away at that moment. Same words as the product screen. */}
+      <ReturnsPosition />
     </div>
   );
 }

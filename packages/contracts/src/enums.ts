@@ -31,10 +31,21 @@ export type PartCondition = z.infer<typeof partConditionSchema>;
 export const estimateCoverageSchema = z.enum(['full', 'partial', 'none']);
 export type EstimateCoverage = z.infer<typeof estimateCoverageSchema>;
 
+/**
+ * Which surface an email came from. The first three are the "not stocked yet"
+ * shelves at `/soon/[shelf]`; the last two are capture points inside the
+ * estimator when we could not answer someone.
+ *
+ * `tokunbo_shelf` is the demand signal that decides which used stock to buy
+ * first. The store names tokunbo as a condition everywhere, the browse filter
+ * carries the axis, and we hold none — so the capture is the honest form of
+ * that gap rather than a shelf stocked with invented listings.
+ */
 export const waitlistSourceSchema = z.enum([
   'landing',
   'facelift_hub',
   'accessories_store',
+  'tokunbo_shelf',
   'coverage_gap',
   'vehicle_not_found',
 ]);

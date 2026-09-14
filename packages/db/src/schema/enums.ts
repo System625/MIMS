@@ -50,11 +50,16 @@ export const estimateCoverage = pgEnum('estimate_coverage', ['full', 'partial', 
 
 export const estimateStatus = pgEnum('estimate_status', ['draft', 'complete', 'abandoned']);
 
-/** Which "coming soon" or capture surface an email came from. */
+/**
+ * Which "coming soon" or capture surface an email came from. The three shelf
+ * values are the pages at `/soon/[shelf]`; `tokunbo_shelf` is the one that
+ * decides which used stock we buy first.
+ */
 export const waitlistSource = pgEnum('waitlist_source', [
   'landing',
   'facelift_hub',
   'accessories_store',
+  'tokunbo_shelf',
   'coverage_gap',
   'vehicle_not_found',
 ]);

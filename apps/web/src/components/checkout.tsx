@@ -15,6 +15,7 @@ import { formatNaira } from '@/lib/money';
 import { formatLeadTime, formatLeadTimeCeiling, resolveCart, type CartView } from '@/mock/cart';
 import { CONDITION_LABEL } from '@/mock/listings';
 import { PICKUP_POINTS } from '@/mock/pickup';
+import { ReturnsPosition } from './returns-position';
 import {
   Button,
   Field,
@@ -557,6 +558,12 @@ function OrderSummary({
       </Panel>
 
       <PayPanel submitted={submitted} errorCount={errorCount} method={method} />
+
+      {/* Between the pay button and the Paystack reassurance, which is where
+          the last doubt actually sits: not "is my card safe" but "what if the
+          thing that arrives in five weeks is wrong". Identical wording to the
+          product page and the basket by construction — see lib/returns.ts. */}
+      <ReturnsPosition />
 
       <Note tone="dashed">
         Your card details never touch this site. Paystack takes the payment — card, bank transfer,

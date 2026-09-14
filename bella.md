@@ -532,12 +532,15 @@ for them exist — see §3), and `apple-icon.png` (Apple touch icons can't be SV
 so it needs a rasterised export).
 
 **The missing support channel is worth calling out separately.** There is no
-phone number, WhatsApp line or address anywhere in this repository, and the
-tracking screen is where its absence costs most: a customer who has prepaid for
-a part stuck in customs has nowhere to go. `SUPPORT_CHANNEL` in
-`components/order-tracking.tsx` is the seam — set it and every escalation block
-comes alive; leave it null and they say plainly that there is no line yet, which
-is at least true. It is a founder's call, not a build task.
+phone number, WhatsApp line or address anywhere in this repository, and it now
+costs on two screens: the tracking page, where a customer who has prepaid for a
+part stuck in customs has nowhere to go, and the returns policy, which sets out
+in detail what we will do and then cannot say who to tell. `SUPPORT_CHANNEL` in
+**`apps/web/src/lib/support.ts`** is the seam — it was a private constant in
+`order-tracking.tsx` until item 9 needed the same answer — set it and every
+escalation block on the site comes alive; leave it null and they say plainly
+that there is no line yet, which is at least true. It is a founder's call, not a
+build task.
 
 ### Two gaps the design opened — closed with item 1
 
@@ -557,8 +560,7 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 
 Ten items, worked **two per session**. Order matters — schema before screens.
 
-**Done: 1–8. Next session takes 9 and 10** — the returns policy and trust
-surfaces, then API wiring and admin.
+**Done: 1–9. Item 10 is next** — API wiring and admin.
 
 **The store now runs end to end on mock data**: browse, product, cart, checkout,
 order tracking and order history, plus the estimator's pivot into the basket.
@@ -679,9 +681,46 @@ spinning, and the orders themselves, which are placeholders until item 10.
    buy screen. **Open design call:** the buy panel and the WhatsApp button are now
    two orange primaries on `/estimate`; whether WhatsApp steps down to ink after
    the pivot is the founder's to say.
-   **Next session starts at item 9.**
-9. **Returns policy and trust surfaces** — FCCPC-compliant. Plus the three
-   coming-soon category pages; `waitlist_source` needs a third enum value.
+9. ~~**Returns policy and trust surfaces**~~ — **done 2026-09-14.** `/returns`,
+   and the promise repeated on the four screens where money is at stake.
+   **The lawful position comes first and the window is not allowed to look like
+   an expiry on it.** "No return, no refund" is contrary to the FCCPA 2018, so
+   clause 01 is the loud one — defective, counterfeit, damaged in transit,
+   misdescribed, or a fit we called `confirmed` that was not: replacement or
+   refund, our cost, return freight included. Clause 02 then says in as many
+   words that the seven-day window is a deadline on US, because our claim
+   against a freight line or a factory decays, and that day eight does not turn
+   a counterfeit part into a lawful sale. A policy that writes its window as an
+   expiry on the law is the same unlawful thing in politer language.
+   **The concession that actually matters is cancellation, not return.** On a
+   four-week pre-order our money sits with us for most of the wait, so clause 03
+   maps cancellation onto the real order statuses: free while `paid`, usually
+   possible while `sourcing`, impossible once it is on the water, and refusable
+   at the counter. That is worth more to a frightened buyer than a returns
+   process they would have to fight for, and it costs us almost nothing.
+   The fitment case splits on what we claimed: `confirmed` that does not fit is
+   our misdescription and falls under clause 01; `probable`, printed as
+   `probable`, is a risk named before payment and we re-list the part and refund
+   what it sells for. Fitted, painted or drilled is the one honest no.
+   **Deliberately not on the page:** section numbers of the Act (a wrong
+   citation on a legal page is worse than none — §10), a restocking percentage,
+   and a refund time in days that is really the bank's.
+   Copy lives in `lib/returns.ts` and renders through one `ReturnsPosition`
+   component on the product page, the basket, the checkout and the tracker,
+   because a refund promise worded four ways is read as four promises.
+   `SUPPORT_CHANNEL` moved to `lib/support.ts` for the same reason.
+   **Also here: the three shelves we have not opened**, at `/soon/[shelf]` —
+   facelift kits, tokunbo, accessories — with `waitlist_source` gaining
+   `tokunbo_shelf` (migration `0002`, one additive line). They are pages rather
+   than teaser boxes because each is shut for a reason worth reading: a facelift
+   kit is one compatibility claim across ten parts at once and needs its own
+   fitment data; tokunbo is blocked outright on the photography question, since
+   every used part is a specific object with its own grade; accessories is the
+   easy shelf we are doing last, and narrower than expected because we will not
+   sell another manufacturer's badge. Each page draws what will go on it, and
+   accessories draws EMPTY SLOTS — we have not chosen that range, and
+   illustrating one would be choosing it by accident. The ask comes last, after
+   the explanation, and says what the address actually decides.
 10. **API wiring and admin** — replace `apps/web/src/mock/*` with real queries;
     admin gets supplier management, the landed-cost calculator, a listing editor
     and an order queue.

@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { CartLink } from '@/components/cart-link';
 import { AppHeader, PageHeading, Shell, SiteFooter } from '@/components/chrome';
-import { NotifyCapture } from '@/components/states';
 import {
   Button,
   Kicker,
@@ -277,15 +276,33 @@ export default function StoreHomePage() {
                 Not stocked yet
               </Title>
               <Kicker as="span" className="text-muted tracking-[0.11em]">
-                One email, nothing else
+                And why each one is shut
               </Kicker>
             </div>
 
+            {/*
+             * Links rather than three email boxes. Each shelf is shut for a
+             * reason worth a paragraph — a fitment claim we cannot make, a
+             * photograph we do not have — and asking for an address under two
+             * lines of teaser gets the address without ever making the argument.
+             * The capture lives on the page, after the explanation.
+             */}
             <div className="mt-[16px] flex flex-wrap gap-[14px]">
               {COMING_SOON.map((shelf) => (
-                <div key={shelf.source} className="min-w-0 flex-[1_1_320px]">
-                  <NotifyCapture title={shelf.title} note={shelf.note} cta="Tell me when" />
-                </div>
+                <Link
+                  key={shelf.source}
+                  href={`/soon/${shelf.slug}`}
+                  className="border-ink bg-panel hover:bg-panel-2 min-w-0 flex-[1_1_300px] border-[1.5px] p-[15px] no-underline"
+                >
+                  <Title className="text-[15px] leading-[1.25]">{shelf.title}</Title>
+                  <p className="text-muted mt-[7px] text-[12.5px] leading-[1.5]">{shelf.note}</p>
+                  <Kicker
+                    as="span"
+                    className="text-flag-deep mt-[10px] inline-block tracking-[0.1em]"
+                  >
+                    Why it is not open →
+                  </Kicker>
+                </Link>
               ))}
             </div>
           </section>

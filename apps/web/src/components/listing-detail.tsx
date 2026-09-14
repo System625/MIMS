@@ -17,6 +17,7 @@ import { FitmentTable, FitmentVerdictPanel } from './fitment';
 import { leadTimeSentence } from './listing-row';
 import { ListingPhotoFrame } from './listing-photo';
 import { PartNumber } from './part-number';
+import { ReturnsPosition } from './returns-position';
 import { Kicker, Note, Panel, PanelBar, QuantityStepper, StatCells, Title } from './ui';
 
 /**
@@ -373,14 +374,12 @@ export function ListingDetailScreen({ slug }: { slug: string }) {
              * refund" is contrary to the FCCPA 2018 and the FCCPC has said so —
              * defective, counterfeit or misdescribed goods are a replacement or
              * a refund whatever any store's policy claims.
+             *
+             * Shared with the basket and the checkout since item 9: the wording
+             * lives in `lib/returns.ts` so this promise cannot quietly differ
+             * between the screen that sells and the screen that takes the money.
              */}
-            <Note tone="rule">
-              <strong className="font-bold">If it is our mistake, it is our cost.</strong>{' '}
-              Defective, counterfeit, or not what we described — you get a replacement or your money
-              back, and no policy of ours overrides that. What we cannot absorb is a part that was
-              described correctly and ordered against the wrong car, which is why we are so careful
-              about the verdict above.
-            </Note>
+            <ReturnsPosition />
           </div>
         </div>
       </div>

@@ -170,7 +170,9 @@ export function PageHeading({
 /**
  * The persistent footer. Deliberately plain type, and it always carries the
  * links that make the numbers arguable — how we price, and what we hold — plus
- * the way back into an order that has already been paid for.
+ * the way back into an order that has already been paid for, and the returns
+ * position, which is the one thing a customer goes looking for at the exact
+ * moment they have stopped trusting the rest of the site.
  */
 export function SiteFooter() {
   return (
@@ -201,6 +203,17 @@ export function SiteFooter() {
           className="text-muted font-mono text-[11px] font-bold uppercase leading-none tracking-[0.09em] underline"
         >
           Coverage
+        </Link>
+        <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
+        {/* A refund promise that is only reachable from the product page is a
+            refund promise for people who have not bought yet. This one has to be
+            findable from the screen somebody is standing on when it goes wrong,
+            which is any of them. */}
+        <Link
+          href="/returns"
+          className="text-muted font-mono text-[11px] font-bold uppercase leading-none tracking-[0.09em] underline"
+        >
+          Returns
         </Link>
         <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
         <Link

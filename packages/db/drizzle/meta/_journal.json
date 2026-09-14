@@ -15,6 +15,13 @@
       "when": 1789232851157,
       "tag": "0001_abnormal_sally_floyd",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789392303401,
+      "tag": "0002_tough_rictor",
+      "breakpoints": true
     }
   ]
 }
