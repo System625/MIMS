@@ -13,7 +13,9 @@ import {
   Title,
 } from '@/components/ui';
 import { CarPlanArt, PartArt, PartsClusterArt } from '@/components/part-art';
+import { FleetGrid } from '@/components/fleet-grid';
 import { VehicleContext } from '@/components/vehicle-context';
+import { FLEET_COUNT, homeFleet } from '@/mock/fleet';
 import { COMING_SOON, HOW_BUYING_WORKS, STORE_CATEGORIES } from '@/mock/store';
 
 export const metadata: Metadata = {
@@ -29,6 +31,15 @@ export const metadata: Metadata = {
  * right way round: someone who knows the part they need should not have to walk
  * through a damage assessment to buy it, and someone who does not know should be
  * offered the estimator by name rather than left to guess.
+ *
+ * IT OPENS ON CARS, NOT PARTS — build plan item 11, and the founder's idea.
+ * A shopper arriving at a parts marketplace is shown a wall of things they
+ * cannot name, when the one thing they can name with complete confidence is
+ * their own car. So the first block on the page is a grid of cars: you find
+ * yours by looking at it, and from that point every price and every fitment
+ * grade on the site is about your car rather than an average one. The two
+ * routes below it are unchanged and still siblings — this is a third door, and
+ * the widest one.
  *
  * The tone is the hard part. E-commerce convention pulls towards urgency badges,
  * crossed-out prices, "23 people are viewing this", confetti at checkout — and
@@ -56,10 +67,35 @@ export default function StoreHomePage() {
             lede="Set your car once. Every price you then see is one all-in Naira figure with duty and clearing already inside it, and every part says how sure we are that it fits your chassis."
           />
 
+          {/* ------------------------------------------------------- cars -- */}
+          <section aria-labelledby="cars-heading" className="mt-[22px]">
+            <div className="border-ink flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b-2 pb-[11px]">
+              <Title as="h2" id="cars-heading" className="text-[19px]">
+                Start with your car
+              </Title>
+              <Link
+                href="/garage"
+                className="text-flag-deep font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em] underline"
+              >
+                All {FLEET_COUNT} cars →
+              </Link>
+            </div>
+
+            <p className="text-ink-soft mt-[12px] max-w-[70ch] text-[13.5px] leading-[1.55]">
+              Tap the car you are buying for. You get a plan of it you can tap panel by panel, and
+              every price on the site is then graded against that exact generation — which is the
+              difference between a bumper that bolts on and one that does not.
+            </p>
+
+            <div className="mt-[14px]">
+              <FleetGrid cars={homeFleet()} min="220px" />
+            </div>
+          </section>
+
           {/* Two ways in, built as siblings. Someone who knows their part number
               and someone staring at a broken bumper are both customers, and
               neither route is the fallback for the other. */}
-          <div className="mt-[22px] flex flex-wrap items-stretch gap-[20px]">
+          <div className="mt-[30px] flex flex-wrap items-stretch gap-[20px]">
             <div className="min-w-0 flex-[1_1_360px]">
               <Panel weight="heavy" className="flex h-full flex-col">
                 <PanelBar weight="heavy" right="Part name or number">

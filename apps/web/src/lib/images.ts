@@ -153,3 +153,51 @@ export function listingImageSrcSet(
 export function imageDeliveryConfigured(): boolean {
   return IMAGE_BASE.length > 0;
 }
+
+/* ---------------------------------------------------------- car imagery -- */
+
+/**
+ * VEHICLE PHOTOGRAPHY is a different shelf from listing photography, and gets
+ * its own pair of functions rather than a flag on the ones above.
+ *
+ * Two reasons, both structural. The bucket path differs: listing photographs
+ * are uploaded per listing and keyed by listing, while these twenty are a fixed
+ * curated set that lives under `fleet/`. And the fit differs and must not be
+ * configurable by accident — a car on a tile is CROPPED to fill the plate,
+ * because twenty photographs from twenty photographers only read as one grid if
+ * they share a frame, whereas a part is CONTAINED so a crop cannot cut off the
+ * bracket the buyer is checking. Those are opposite defaults for opposite
+ * reasons, and one function with a parameter would eventually be called with
+ * the wrong one.
+ *
+ * The local fallback is `public/fleet/`, which is where these files actually
+ * are today: twenty photographs at 640×400, averaging ~58 KB. That is a real
+ * cost on a Lagos connection and the grid is built for it — every tile is
+ * lazily loaded with its dimensions declared, so a phone fetches the cars it
+ * scrolls to and nothing reflows when they land.
+ */
+const VEHICLE_PREFIX = 'fleet';
+
+export function vehicleImageUrl(
+  storageKey: string | null | undefined,
+  transform: Omit<ImageTransform, 'fit'>,
+): string | null {
+  if (!storageKey || !isSafeKey(storageKey)) return null;
+  if (!IMAGE_BASE) return `/${VEHICLE_PREFIX}/${encodeKey(storageKey)}`;
+  const options = serialiseOptions({ ...transform, fit: 'cover' });
+  return `${IMAGE_BASE}/cdn-cgi/image/${options}/${VEHICLE_PREFIX}/${encodeKey(storageKey)}`;
+}
+
+export function vehicleImageSrcSet(
+  storageKey: string | null | undefined,
+  maxWidth: number,
+): string | null {
+  // Without the CDN there is one file and one size; a srcset of identical URLs
+  // would only mislead the browser's picker into thinking it had a choice.
+  if (!IMAGE_BASE || !storageKey || !isSafeKey(storageKey)) return null;
+
+  const widths = WIDTH_LADDER.filter((width) => width <= maxWidth * 2);
+  const ladder = widths.length > 0 ? widths : [WIDTH_LADDER[0]];
+
+  return ladder.map((width) => `${vehicleImageUrl(storageKey, { width })} ${width}w`).join(', ');
+}

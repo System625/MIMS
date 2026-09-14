@@ -1,7 +1,8 @@
 'use client';
 
-import { ZONES, type ZoneView } from '@/mock/zones';
-import { cx, Kicker } from './ui';
+import { ZONES } from '@/mock/zones';
+import { CarPlan, PlanLabel, PlanOrdinal, planCellClass } from './car-plan';
+import { Kicker } from './ui';
 
 /**
  * Screen 2 — the damage selector.
@@ -26,179 +27,35 @@ interface SelectorProps {
   onToggle: (code: string) => void;
 }
 
-/** Shared cell chrome: the orange fill is an overlay so the label never inverts. */
-function ZoneCell({
-  zone,
-  selected,
-  onToggle,
-  className,
-  style,
-  children,
-}: {
-  zone: ZoneView;
-  selected: boolean;
-  onToggle: (code: string) => void;
-  className?: string;
-  style?: React.CSSProperties;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={() => onToggle(zone.code)}
-      style={style}
-      className={cx(
-        'border-ink relative flex flex-col items-center justify-center gap-[3px] overflow-hidden',
-        zone.isInternal ? 'bg-panel-2 border-dashed' : 'bg-white',
-        'border-[1.5px]',
-        className,
-      )}
-    >
-      <span
-        aria-hidden
-        className="bg-flag absolute inset-0 transition-opacity"
-        style={{ opacity: selected ? 1 : 0 }}
-      />
-      {children}
-    </button>
-  );
-}
-
-function CellLabel({ children, size = 'sm' }: { children: React.ReactNode; size?: 'sm' | 'lg' }) {
-  return (
-    <span
-      className={cx(
-        'relative text-center font-bold uppercase',
-        size === 'lg' ? 'text-[15px] leading-none tracking-[0.03em]' : 'text-[11px] leading-[1.15]',
-      )}
-    >
-      {children}
-    </span>
-  );
-}
-
-function CellOrdinal({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="relative font-mono text-[11px] font-bold leading-none tracking-[0.08em]">
-      {children}
-    </span>
-  );
-}
-
-function zone(code: string): ZoneView {
-  const found = ZONES.find((item) => item.code === code);
-  if (!found) throw new Error(`Unknown damage zone: ${code}`);
-  return found;
-}
-
+/**
+ * Screen 2's cell: a toggle. The orange fill is an overlay so the label never
+ * inverts, and the layout comes from `car-plan.tsx` so the estimator's car and
+ * the store's car stay the same drawing.
+ */
 export function ZoneDiagram({ selected, onToggle }: SelectorProps) {
-  const cell = (code: string) => ({
-    zone: zone(code),
-    selected: selected.has(code),
-    onToggle,
-  });
-
   return (
-    <div>
-      <div
-        className="bg-panel-2 border-ink mx-auto grid w-full max-w-[440px] gap-[4px] border-2 p-[9px]"
-        style={{ gridTemplateColumns: '1fr 1.55fr 1fr' }}
-        role="group"
-        aria-label="Damaged areas, plan view"
-      >
-        <ZoneCell {...cell('headlight_left')} className="h-[62px]">
-          <CellOrdinal>03</CellOrdinal>
-          <CellLabel>
-            Headlight
-            <br />
-            left
-          </CellLabel>
-        </ZoneCell>
-
-        <ZoneCell {...cell('front_bumper')} className="h-[62px]">
-          <CellOrdinal>01</CellOrdinal>
-          <CellLabel>
-            <span className="text-[12px] tracking-[0.02em]">Front bumper</span>
-          </CellLabel>
-        </ZoneCell>
-
-        <ZoneCell {...cell('headlight_right')} className="h-[62px]">
-          <CellOrdinal>04</CellOrdinal>
-          <CellLabel>
-            Headlight
-            <br />
-            right
-          </CellLabel>
-        </ZoneCell>
-
-        {/* Fenders run the full depth of the front wing, which is what they do
-            on the car — so they span both the radiator and hood rows. */}
-        <ZoneCell {...cell('fender_left')} className="row-span-2">
-          <CellOrdinal>06</CellOrdinal>
-          <CellLabel>
-            Fender
-            <br />
-            left
-          </CellLabel>
-        </ZoneCell>
-
-        {/* The internal zone. Dashed and labelled rather than given a fake panel:
-            there is no exterior surface here to point at. */}
-        <ZoneCell {...cell('radiator')} className="h-[52px] flex-row gap-[7px]">
-          <CellOrdinal>05</CellOrdinal>
-          <CellLabel>
-            <span className="text-[11px] leading-none tracking-[0.02em]">Radiator · internal</span>
-          </CellLabel>
-        </ZoneCell>
-
-        <ZoneCell {...cell('fender_right')} className="row-span-2">
-          <CellOrdinal>07</CellOrdinal>
-          <CellLabel>
-            Fender
-            <br />
-            right
-          </CellLabel>
-        </ZoneCell>
-
-        <ZoneCell {...cell('hood')} className="h-[96px] gap-[4px]">
-          <CellOrdinal>02</CellOrdinal>
-          <CellLabel size="lg">Hood</CellLabel>
-        </ZoneCell>
-
-        {/* Not a zone. Struck out so a user with a caved-in door learns
-            immediately that we cannot price it, rather than tapping and failing. */}
-        <div
-          className="hatch-dense border-edge-2 col-span-3 flex h-[112px] items-center justify-center border-[1.5px]"
-          aria-hidden
-        >
-          <span className="text-stone text-center font-mono text-[11px] font-bold leading-[1.5] tracking-[0.11em]">
-            CABIN / DOORS
-            <br />
-            NOT IN CATALOGUE
-          </span>
-        </div>
-
-        <ZoneCell {...cell('rear_panel')} className="col-span-3 h-[66px] flex-row gap-[8px]">
-          <CellOrdinal>09</CellOrdinal>
-          <CellLabel>
-            <span className="text-[12px] leading-none tracking-[0.02em]">Rear panel / boot</span>
-          </CellLabel>
-        </ZoneCell>
-
-        <ZoneCell {...cell('rear_bumper')} className="col-span-3 h-[52px] flex-row gap-[8px]">
-          <CellOrdinal>08</CellOrdinal>
-          <CellLabel>
-            <span className="text-[12px] leading-none tracking-[0.02em]">Rear bumper</span>
-          </CellLabel>
-        </ZoneCell>
-      </div>
-
-      <div className="text-muted-2 mx-auto mt-[8px] flex max-w-[440px] justify-between font-mono text-[11px] leading-none tracking-[0.1em]">
-        <span>FRONT ↑</span>
-        <span>REAR ↓</span>
-      </div>
-    </div>
+    <CarPlan
+      ariaLabel="Damaged areas, plan view"
+      cell={(slot) => {
+        const on = selected.has(slot.zone.code);
+        return (
+          <button
+            type="button"
+            aria-pressed={on}
+            onClick={() => onToggle(slot.zone.code)}
+            className={planCellClass(slot)}
+          >
+            <span
+              aria-hidden
+              className="bg-flag absolute inset-0 transition-opacity"
+              style={{ opacity: on ? 1 : 0 }}
+            />
+            <PlanOrdinal>{slot.zone.ordinal}</PlanOrdinal>
+            <PlanLabel size={slot.labelSize}>{slot.zone.diagramLabel}</PlanLabel>
+          </button>
+        );
+      }}
+    />
   );
 }
 

@@ -216,6 +216,17 @@ export function SiteFooter() {
           Returns
         </Link>
         <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
+        {/* The car photographs are used under CC BY and CC BY-SA, which require
+            attribution wherever they appear — and they appear on the home page.
+            A credits link reachable only from the pages that happen to link it
+            would not discharge that. */}
+        <Link
+          href="/photo-credits"
+          className="text-muted font-mono text-[11px] font-bold uppercase leading-none tracking-[0.09em] underline"
+        >
+          Photo credits
+        </Link>
+        <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
         <Link
           href="/privacy"
           className="text-muted font-mono text-[11px] font-bold uppercase leading-none tracking-[0.09em] underline"

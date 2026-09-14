@@ -11,6 +11,7 @@ import {
   STOCK_LABEL,
   type SearchResult,
 } from '@/mock/listings';
+import { zoneByCode } from '@/mock/zones';
 import { CatalogueGapRow, ListingRow, ResultTierHeading } from './listing-row';
 import { Button, cx, Kicker, Note, Panel, PanelBar, Title } from './ui';
 
@@ -57,6 +58,11 @@ function isSort(value: string | null): value is ListingSort {
   return value !== null && SORTS.some((sort) => sort.value === value);
 }
 
+/** A zone code we actually draw. Anything else in the URL is ignored, not searched for. */
+function isZoneCode(value: string | undefined): value is string {
+  return value !== undefined && zoneByCode(value) !== undefined;
+}
+
 export function BrowseParts() {
   const router = useRouter();
   const pathname = usePathname();
@@ -65,6 +71,12 @@ export function BrowseParts() {
 
   const q = params.get('q') ?? '';
   const categoryCode = params.get('category') ?? undefined;
+  /* A body zone, arrived at by tapping a panel on a car's plan — build plan
+     item 12. It is read the same way as a category and lives in the URL for the
+     same reason: "the front of my Corolla" is exactly the kind of list somebody
+     sends to their mechanic. An unrecognised code is dropped rather than
+     searched for, so a mangled link returns the catalogue instead of nothing. */
+  const zoneParam = params.get('zone') ?? undefined;
   /* Joined into a stable string first: an array rebuilt on every render is a
      new dependency every render, and the search below would then re-run
      whether or not the filters actually changed. */
@@ -96,6 +108,9 @@ export function BrowseParts() {
       searchListings({
         q,
         categoryCode,
+        /* Validated here rather than above, so the memo's dependency is the raw
+           parameter — the same shape as every other filter in this list. */
+        zoneCode: isZoneCode(zoneParam) ? zoneParam : undefined,
         condition,
         stockModel,
         fitsOnly,
@@ -105,11 +120,19 @@ export function BrowseParts() {
         // who set one an hour ago. The results wait instead.
         vehicle: hydrated ? vehicle : null,
       }),
-    [q, categoryCode, condition, stockModel, fitsOnly, sort, hydrated, vehicle],
+    [q, categoryCode, zoneParam, condition, stockModel, fitsOnly, sort, hydrated, vehicle],
   );
 
+  /* Looked up after the query, not before it: the search takes the raw
+     parameter, and this is only the zone's name and description for the chip. */
+  const zone = isZoneCode(zoneParam) ? zoneByCode(zoneParam) : undefined;
+
   const activeFilters =
-    (categoryCode ? 1 : 0) + condition.length + (stockModel ? 1 : 0) + (fitsOnly ? 1 : 0);
+    (categoryCode ? 1 : 0) +
+    (zone ? 1 : 0) +
+    condition.length +
+    (stockModel ? 1 : 0) +
+    (fitsOnly ? 1 : 0);
 
   return (
     <div className="mt-[20px] flex flex-wrap items-start gap-[20px]">
@@ -127,9 +150,35 @@ export function BrowseParts() {
       <div className="min-w-0 flex-[3_1_460px]">
         <SearchField initial={q} update={update} />
 
+        {/*
+         * The zone is shown as a removable chip rather than as another checkbox
+         * in the rail, because it did not come from the rail — somebody tapped
+         * the front bumper of a picture of their car, and the screen has to
+         * carry that context back to them or the narrowed result reads as a
+         * catalogue that has lost most of its stock. Clearing it is one tap and
+         * leaves every other filter alone.
+         */}
+        {zone ? (
+          <div className="mt-[12px] flex flex-wrap items-center gap-[9px]">
+            <span className="border-flag bg-flag-soft flex min-h-[36px] items-center gap-[8px] border-[1.5px] px-[10px] text-[12.5px] font-bold uppercase leading-none">
+              {zone.name}
+              <button
+                type="button"
+                onClick={() => update((next) => next.delete('zone'))}
+                className="text-flag-deep font-mono text-[12px] font-bold"
+              >
+                ×<span className="sr-only">— show every panel again</span>
+              </button>
+            </span>
+            <span className="text-muted text-[12px] leading-[1.4]">
+              Parts on this part of the car. {zone.description}.
+            </span>
+          </div>
+        ) : null}
+
         <div className="mt-[14px] flex flex-wrap items-center justify-between gap-x-[16px] gap-y-[10px]">
           <Kicker as="div" className="text-muted tracking-[0.11em]">
-            {describeQuery(q, categoryCode)}
+            {describeQuery(q, categoryCode, zone?.name)}
           </Kicker>
 
           <label className="flex items-center gap-[8px]">
@@ -396,6 +445,7 @@ function FilterRail({
             onClick={() =>
               update((next) => {
                 next.delete('category');
+                next.delete('zone');
                 next.delete('condition');
                 next.delete('stock');
                 next.delete('fits');
@@ -553,6 +603,7 @@ function NothingFound({
               update((next) => {
                 next.delete('q');
                 next.delete('category');
+                next.delete('zone');
                 next.delete('condition');
                 next.delete('stock');
                 next.delete('fits');
@@ -587,7 +638,15 @@ function ResultsSkeleton() {
   );
 }
 
-function describeQuery(q: string, categoryCode: string | undefined): string {
+function describeQuery(
+  q: string,
+  categoryCode: string | undefined,
+  zoneName: string | undefined,
+): string {
+  // The zone outranks the category in the description because it is the more
+  // specific of the two and the one the customer arrived by.
+  if (q && zoneName) return `“${q}” on the ${zoneName.toLowerCase()}`;
+  if (zoneName) return zoneName;
   if (q && categoryCode) return `“${q}” in ${categoryName(categoryCode)}`;
   if (q) return `Results for “${q}”`;
   if (categoryCode) return categoryName(categoryCode);

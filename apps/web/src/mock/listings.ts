@@ -123,6 +123,14 @@ interface CataloguePart {
   name: string;
   mpn: string | null;
   categoryCode: string;
+  /**
+   * The body zone this part belongs to, transcribed from `mock/parts.ts` —
+   * which has carried a `zoneCode` per row since the estimator was built. It is
+   * copied rather than inferred on purpose: a zone is NOT derivable from
+   * category plus position, and the day the catalogue holds a tail lamp,
+   * `lighting` + `left` would quietly file it under the left headlight.
+   */
+  zoneCode: string;
   art: PartArtKind;
   position: 'left' | 'right' | 'front' | 'rear' | 'pair' | 'not_applicable';
   /** Canvas copy, verbatim. */
@@ -146,6 +154,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Front bumper cover',
     mpn: '52119-02997',
     categoryCode: 'bumper',
+    zoneCode: 'front_bumper',
     art: 'bumper',
     position: 'front',
     detail: 'Primed, unpainted. Fog-lamp cut-outs for LE trim.',
@@ -158,6 +167,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Hood / bonnet panel',
     mpn: '53301-02330',
     categoryCode: 'body_panel',
+    zoneCode: 'hood',
     art: 'body_panel',
     position: 'front',
     detail: 'Steel panel only. Hinges and catch usually reusable.',
@@ -170,6 +180,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Headlight assembly, left',
     mpn: '81170-02B10',
     categoryCode: 'lighting',
+    zoneCode: 'headlight_left',
     art: 'lighting',
     position: 'left',
     detail: 'Halogen, non-LED. Check your existing unit before ordering LED.',
@@ -182,6 +193,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Radiator, 1.8L',
     mpn: '16400-0T060',
     categoryCode: 'cooling',
+    zoneCode: 'radiator',
     art: 'cooling',
     position: 'front',
     detail: 'Includes upper and lower mounts. Replace the cap with it.',
@@ -215,6 +227,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Fender, left',
     mpn: '53812-02936',
     categoryCode: 'body_panel',
+    zoneCode: 'fender_left',
     art: 'body_panel',
     position: 'left',
     detail: 'Fits chassis ZRE172 — no verified Nigerian price yet.',
@@ -227,6 +240,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Headlight assembly, right',
     mpn: null,
     categoryCode: 'lighting',
+    zoneCode: 'headlight_right',
     art: 'lighting',
     position: 'right',
     detail: 'Fits chassis ZRE172 — part number not yet on file.',
@@ -239,6 +253,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Fender, right',
     mpn: null,
     categoryCode: 'body_panel',
+    zoneCode: 'fender_right',
     art: 'body_panel',
     position: 'right',
     detail: 'Fits chassis ZRE172 — part number not yet on file.',
@@ -251,6 +266,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Rear bumper cover',
     mpn: null,
     categoryCode: 'bumper',
+    zoneCode: 'rear_bumper',
     art: 'bumper',
     position: 'rear',
     detail: 'Fits chassis ZRE172 — no verified Nigerian price yet.',
@@ -263,6 +279,7 @@ const CATALOGUE: readonly CataloguePart[] = [
     name: 'Boot lid',
     mpn: null,
     categoryCode: 'body_panel',
+    zoneCode: 'rear_panel',
     art: 'body_panel',
     position: 'rear',
     detail: 'Fits chassis ZRE172 — no verified Nigerian price yet.',
@@ -551,6 +568,7 @@ export interface CatalogueGap {
   name: string;
   mpn: string | null;
   categoryCode: string;
+  zoneCode: string;
   art: PartArtKind;
   detail: string;
   fitment: FitmentVerdict | null;
@@ -559,6 +577,13 @@ export interface CatalogueGap {
 export interface SearchArgs {
   q?: string;
   categoryCode?: string;
+  /**
+   * A body zone, as tapped on a car's plan view. It narrows the same way a
+   * category does and for the same reason — it is a place on the car rather
+   * than a shelf in the warehouse, and those are two different questions a
+   * customer can arrive with.
+   */
+  zoneCode?: string;
   condition?: readonly PartCondition[];
   stockModel?: StockModel;
   fitsOnly?: boolean;
@@ -624,7 +649,8 @@ export function searchListings(args: SearchArgs): SearchResult {
   const matched = LISTINGS.filter(
     (listing) =>
       matchesQuery(listing.part, q) &&
-      (!args.categoryCode || listing.part.categoryCode === args.categoryCode),
+      (!args.categoryCode || listing.part.categoryCode === args.categoryCode) &&
+      (!args.zoneCode || listing.part.zoneCode === args.zoneCode),
   );
 
   // Facets count what the OTHER filters leave, so a count never reads as zero
@@ -640,7 +666,13 @@ export function searchListings(args: SearchArgs): SearchResult {
       code,
       name,
       count: LISTINGS.filter(
-        (listing) => matchesQuery(listing.part, q) && listing.part.categoryCode === code,
+        (listing) =>
+          matchesQuery(listing.part, q) &&
+          listing.part.categoryCode === code &&
+          // The zone outranks the category facet: standing on the front bumper,
+          // "Lighting · 2" would be counting lamps that are not on this corner
+          // of the car.
+          (!args.zoneCode || listing.part.zoneCode === args.zoneCode),
       ).length,
     })),
     fitment: (['confirmed', 'probable', 'unknown'] as FitmentConfidence[]).map((confidence) => ({
@@ -688,12 +720,14 @@ export function searchListings(args: SearchArgs): SearchResult {
     (part) =>
       !listedSlugs.has(part.slug) &&
       matchesQuery(part, q) &&
-      (!args.categoryCode || part.categoryCode === args.categoryCode),
+      (!args.categoryCode || part.categoryCode === args.categoryCode) &&
+      (!args.zoneCode || part.zoneCode === args.zoneCode),
   ).map((part) => ({
     slug: part.slug,
     name: part.name,
     mpn: part.mpn,
     categoryCode: part.categoryCode,
+    zoneCode: part.zoneCode,
     art: part.art,
     detail: part.detail,
     fitment: verdictFor(part, vehicle),
@@ -801,3 +835,60 @@ export function categoryName(code: string): string {
 /** Total listings, used only where the page states its own scale honestly. */
 export const LISTING_COUNT = LISTINGS.length;
 export const CATALOGUE_PART_COUNT = CATALOGUE.length;
+
+/* ------------------------------------------------------------------ zones -- */
+
+/**
+ * What the catalogue holds for one body zone — build plan item 12.
+ *
+ * Three counts rather than one, because they answer three different questions
+ * and collapsing them would flatter us. `offers` is what can be bought today.
+ * `gaps` is parts we can name for this zone but hold no priced offer for, and
+ * it is the honest half of a count that would otherwise read as nothing here.
+ * `confirmedForVehicle` is the only figure that depends on the car in context,
+ * and it is null when no car is set — a zero there would say "none of these fit
+ * you" to somebody we have never asked what they drive.
+ */
+export interface ZoneStock {
+  zoneCode: string;
+  offers: number;
+  gaps: number;
+  confirmedForVehicle: number | null;
+  /** The cheapest offer in the zone, so a tile can carry a price rather than a count. */
+  fromPrice: ListingSummary['price'] | null;
+}
+
+export function zoneStock(zoneCode: string, vehicle: VehicleDetail | null): ZoneStock {
+  const offers = LISTINGS.filter((listing) => listing.part.zoneCode === zoneCode);
+  const listedSlugs = new Set(LISTINGS.map((listing) => listing.part.slug));
+  const gaps = CATALOGUE.filter(
+    (part) => part.zoneCode === zoneCode && !listedSlugs.has(part.slug),
+  );
+
+  const cheapest = offers.reduce<BuiltListing | null>((best, listing) => {
+    if (best === null) return listing;
+    return toMinorUnits(listing.summary.price.amount) < toMinorUnits(best.summary.price.amount)
+      ? listing
+      : best;
+  }, null);
+
+  return {
+    zoneCode,
+    offers: offers.length,
+    gaps: gaps.length,
+    confirmedForVehicle:
+      vehicle === null
+        ? null
+        : offers.filter((listing) => verdictFor(listing.part, vehicle)?.confidence === 'confirmed')
+            .length,
+    fromPrice: cheapest?.summary.price ?? null,
+  };
+}
+
+/** Every zone's stock in one pass, for the car plan view. */
+export function zoneStockAll(
+  zoneCodes: readonly string[],
+  vehicle: VehicleDetail | null,
+): Record<string, ZoneStock> {
+  return Object.fromEntries(zoneCodes.map((code) => [code, zoneStock(code, vehicle)]));
+}

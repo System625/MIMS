@@ -513,7 +513,10 @@ be mistaken for one another.
 **Also built:** the marketplace home at `/`, the persistent vehicle-context band,
 search and browse at `/parts`, product detail at `/parts/[slug]`, the cart at
 `/cart`, checkout at `/checkout`, and the whole commerce schema and its
-contracts. None of the commerce tables has a route in front of it yet — the store
+contracts. **Plus the garage** (items 11–12): `/garage`, a page per car at
+`/garage/[id]` with the catalogue plan of its nine panels, `/photo-credits`, and
+twenty curated car photographs in `apps/web/public/fleet/` — the only real
+photography in the repository, and it is of cars rather than parts. None of the commerce tables has a route in front of it yet — the store
 runs on `apps/web/src/mock/listings.ts` and `mock/cart.ts`, and wiring it to
 Postgres is item 10. The store has no holding pages left.
 
@@ -535,7 +538,8 @@ that means and what is still owed.
 
 **Does not exist:** a published support channel of any kind, the admin dashboard
 and all four of its tools, listing photographs (the storage and delivery for them
-exist — see §3), and `apple-icon.png` (Apple touch icons can't be SVG, so it needs
+exist — see §3; the car photographs added at item 11 are a different thing and
+make no claim about a part), and `apple-icon.png` (Apple touch icons can't be SVG, so it needs
 a rasterised export). **Order placement now exists in the API and nowhere else**:
 `apps/web` still reads `src/mock/*`, so no screen has been wired to it, and the
 queries behind it have never met a Postgres — item 10 in §12 is precise about the
@@ -571,15 +575,16 @@ panel. `apps/web/src/mock/zones.ts` is the list to seed `damage_zones` from.
 Twelve items, worked **two per session**. Order matters — schema before screens.
 
 Items 11 and 12 were added on 2026-09-14 from the founder's own note of that
-date, and are the NEXT session's pair. They do not displace the rest of item 10 —
-the database still comes first the moment there is one.
+date and **built the same day**. They did not displace the rest of item 10 — the
+database still comes first the moment there is one.
 
-**Done: 1–9. Item 10 is HALF done** — order placement is built and tested,
-nothing has been run against a database, `apps/web` is still on mocks, and admin
-has not been started. See item 10 for exactly what remains.
+**Done: 1–9, 11 and 12. Item 10 is HALF done** — order placement is built and
+tested, nothing has been run against a database, `apps/web` is still on mocks,
+and admin has not been started. See item 10 for exactly what remains.
 
-**The store now runs end to end on mock data**: browse, product, cart, checkout,
-order tracking and order history, plus the estimator's pivot into the basket.
+**The store now runs end to end on mock data**: cars, browse, product, cart,
+checkout, order tracking and order history, plus the estimator's pivot into the
+basket.
 The two stops are the pay button, which says payment is not open rather than
 spinning, and the orders themselves, which are placeholders until item 10.
 
@@ -798,75 +803,68 @@ spinning, and the orders themselves, which are placeholders until item 10.
       live, which would break "orders are snapshots". The fix is additive
       columns on `orders`, and it belongs with the admin work.
 
-11. **The garage — cars as the front door.** Planned 2026-09-14, not started.
-    The founder's observation, and it is correct: this store opens on a wall of
-    parts nobody can name, and every competitor does the same. The fix is to
-    open on CARS. A grid of vehicles a Nigerian owner recognises on sight,
-    tapped to set the context, and only then parts. It is the garage pattern —
-    eBay Motors and Amazon both run it — and three quarters of the parts already
-    exist here: `vehicle-context.tsx` holds a car, `estimate-flow.tsx` persists
-    it, and `ResolvedVehicle.chassisCode` is the key that makes a generation-
-    correct picture possible at all.
-    **The fleet is the covered makes only** — Toyota, Honda, Nissan,
-    Mercedes-Benz, Hyundai, Kia, Lexus, drawn from `mock/vehicles.ts`. Peugeot
-    and Innoson are deliberately NOT tiles. They keep the coverage-gap route
-    they already have: tell us what you drive and we will price it. A tile is a
-    promise that we sell parts for that car, and the one thing this store does
-    not do is imply a catalogue it does not hold.
-    **The imagery rule, which is the whole risk in this item.** A photograph of
-    a car is not a claim about a part — which is why this is safer ground than
-    listing photography — but a photograph of the WRONG GENERATION is a fitment
-    claim wearing a disguise, and fitment is the product. So:
-    - One image per generation, stamped with the chassis code the tile resolves
-      to. Not one per model year. `mock/vehicles.ts` already thinks in ranges
-      (`2014–2018`) for exactly this reason: one range is one set of part
-      numbers.
-    - Photographs come from **Wikimedia Commons, which files cars by generation
-      code** — `E140`, `E170`, `N17` — under CC BY / CC BY-SA. Re-hosted in R2
-      and served through the `lib/images.ts` path, never hot-linked. The
-      licences need an attribution page; build it with the images, not after.
-    - **No commercial car-image API.** This was tested rather than assumed on
-      2026-09-14 and the free tier fails three ways: images come back
-      watermarked, `modelYear` is ignored (a 2018 and a 2008 Corolla returned
-      the identical current-generation car), and an unknown vehicle returns a
-      confident photograph of something else — `innoson ivm g5` produced a boxy
-      off-roader, because the CDN answers with an ML "closest match" rather than
-      an error. A silent wrong car is the visual form of the invented part
-      number §10 forbids. The paid tier honours the year and stays on the table
-      for when the fleet outgrows hand-curation; at 12–20 tiles it has not.
-    - **v1 crops to a consistent plate; it does not fake studio isolation.**
-      Commons photographs stand in real streets and car parks. Cropping them to
-      one aspect on one panel is honest and shippable in an afternoon;
-      background-knocking twenty images to a studio white is a person with an
-      editor, or the paid API, and is not worth blocking on.
-    - **Uncovered cars and missing generations take a drawing**, the same
-      two-state discipline `listing-photo.tsx` already enforces: the states must
-      never be confusable, and the drawn one must never be mistakable for a
-      photograph of a specific car. `part-art.tsx` is the precedent and
-      `CarPlanArt` is the starting point.
-      **The garage is more than one car.** A mechanic works on several, and that
-      is the user this idea is aimed at. Keep `mims.estimate.v1` as the CURRENT
-      car — the estimator shares it and bumping the key would quietly empty
-      somebody's context — and add a second key for the saved list. A garage that
-      forgets is worse than no garage.
+11. ~~**The garage — cars as the front door.**~~ — **done 2026-09-14.** The
+    store opens on a grid of cars instead of a wall of unnameable parts: eight
+    on `/`, all twenty on `/garage`, one page per car at `/garage/[id]`. Tapping
+    a tile sets the vehicle context AND opens the car, in one tap, on a real
+    `<Link>` so the pages stay prerendered and middle-clickable.
+    **The fleet is `mock/fleet.ts`: twenty generations across the seven covered
+    makes.** Peugeot and Innoson are deliberately not tiles and keep their
+    coverage-gap route — `assertCoveredFleet()` throws at module load if anyone
+    adds an uncovered make, because a tile is a promise that we sell parts for
+    that car. `/garage` says so in as many words under "Your car is not here".
+    **One photograph per generation, from Wikimedia Commons**, curated by hand,
+    re-hosted in `public/fleet/` (and keyed for R2 the day the CDN is set), all
+    cropped to one 640×400 plate at ~58 KB and lazily loaded with their
+    dimensions declared. Attribution is a licence condition and shipped WITH
+    the images: `/photo-credits` is generated from the fleet rows, is linked
+    from the footer of every page, and each car page names its own photographer
+    under the picture. Where the car photographed wears a different badge from
+    the tile — the N17 Almera is badged Sunny — the row says so rather than
+    hoping nobody notices.
+    **Generations are `chassisCode` where the repo holds one (ZRE172 on the demo
+    Corolla) and the generation designation otherwise (W204, XV40).** Year spans
+    are display context; nothing grades a part by them. A tapped tile resolves
+    to the newest year in the span — the manual cascade's own rule — and the
+    car's page carries a year row to correct it in one tap. Trim, engine,
+    `variantId` and `partsOnFile` stay null, because a tile does not know them.
+    **The garage is a second key, `mims.garage.v1` (`lib/garage.tsx`).**
+    `mims.estimate.v1` is still the CURRENT car and is still shared with the
+    estimator; the saved list is separate so it can be cleared or corrupted
+    without touching the one fact every price depends on. A saved entry holds
+    the vehicle itself, not a pointer at a tile, so it survives the fleet being
+    re-curated.
+    **No commercial car-image API** — tested on 2026-09-14 and rejected:
+    watermarked images, `modelYear` ignored, and an unknown vehicle answered
+    with a confident photograph of something else. Don't re-shop this.
+    **Street names are deliberately absent.** "Big Daddy", "End of Discussion"
+    and the rest would be worth more on a tile than the chassis code beside it,
+    and getting one wrong is worse than not having it — the field is waiting on
+    the founder's own list.
 
-12. **Car → zone → parts: the dissection route.** Planned 2026-09-14, not
-    started. The second half of the founder's idea: having put a whole car on
-    the screen, take it apart. **The interaction is already built** —
-    `zone-selector.tsx`'s plan view of nine body zones, made for the estimator,
-    and its own comment carries the reasoning that still holds: front, rear and
-    both sides are all reachable, no zone hides behind another, and the smallest
-    target stays a 62px cell rather than a hotspot on an illustration. The store
-    does not need a new component. It needs that one, pointed at the catalogue
-    instead of at a damage report.
-    What is genuinely new is a **zone → category map** — `front_bumper` to
-    `bumper`, `headlight_*` to `lighting`, `hood` and the fenders to
-    `body_panel`, and so on across the nine and the four `categoryCode`s in
-    `mock/listings.ts`. That mapping is data and belongs beside the zones.
-    **Every zone carries its count for the car in context**, and a zone we hold
-    nothing priced for draws EMPTY rather than leading somewhere apologetic —
-    the `/soon/accessories` precedent. A plan view whose cells all look alike
-    and half of which dead-end is worse than the list it replaced.
+12. ~~**Car → zone → parts: the dissection route.**~~ — **done 2026-09-14.**
+    Having put a whole car on the screen, take it apart. The estimator's plan
+    view was extracted into `car-plan.tsx` and is now ONE drawing with two
+    cells: a toggle in the estimator, a link in the store. Two drawings of the
+    same car that drifted apart would be two different cars to a customer who
+    meets both, and they will.
+    **The zone → parts link is a `zoneCode` on every catalogue row, transcribed
+    from `mock/parts.ts`** — which has carried one per row since the estimator
+    was built. That is better than the zone → `categoryCode` map this item
+    originally planned, and it is the reason the item was cheap: category plus
+    position does NOT determine a zone, and the day the catalogue holds a tail
+    lamp, `lighting` + `left` would file it under the left headlight.
+    `/parts?zone=…` filters on it and carries a removable chip, because a
+    narrowed catalogue that does not say why reads as a catalogue that has lost
+    its stock.
+    **Every panel carries its own count** (`zoneStock` in `mock/listings.ts`):
+    what can be bought, what we can only name, and — only when a car is set —
+    how many are confirmed for it. A zone with no priced offer draws EMPTY, on
+    the `/soon/accessories` precedent; five of the nine currently do, and the
+    car page says "6 priced · 5 not stocked" rather than smoothing it over. The
+    plan is paired with a table in ordinal order rather than a toggle: the plan
+    is a picture and runs front to back, a list is read down the stamps, and the
+    table is also the accessible route through the same information.
     **No 3D, and this is recorded so it is not re-litigated.** It was costed on
     2026-09-14. A 320px car photograph is ~20 KB; a Draco-compressed glTF car is
     ~5 MB, which is Google's _ceiling_ for web assets, not a target. Against
@@ -888,8 +886,10 @@ copy. Don't improve on it.
 The **marketplace is different**: it is being built from the existing design
 patterns rather than from a canvas, by decision. Extend the system in
 `globals.css` and the component inventory (`ui.tsx`, `chrome.tsx`,
-`parts-table.tsx`, `zone-selector.tsx`, `states.tsx`, `mark.tsx`,
-`vehicle-context.tsx`, `part-art.tsx`). If the
+`parts-table.tsx`, `car-plan.tsx` (the shared plan of the car; `zone-selector.tsx`
+and the store's zone view are two sets of cells inside it), `states.tsx`,
+`mark.tsx`, `vehicle-context.tsx`, `part-art.tsx`, `car-photo.tsx`,
+`fleet-grid.tsx`). If the
 marketplace genuinely needs a component the estimator never had — a price that is
 a price rather than an estimate, a quantity stepper, a delivery selector — design
 it _in_ that system.
