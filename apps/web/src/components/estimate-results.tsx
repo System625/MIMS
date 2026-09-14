@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useEstimateFlow } from '@/lib/estimate-flow';
 import { whatsappHref, whatsappMessage } from '@/lib/handoff';
 import { formatLongDate, formatRange } from '@/lib/money';
+import { offersForPart } from '@/mock/listings';
 import { buildEstimate, explanationParagraphs, type EstimateView } from '@/mock/parts';
 import { vehicleStamp } from '@/mock/vehicles';
 import { LoadingPanel, NotifyCapture, SlowConnectionPanel } from './states';
 import { PageHeading } from './chrome';
 import { PartsTable } from './parts-table';
-import { Button, Kicker, Note, Panel, StatCells, Title } from './ui';
+import { Button, Kicker, Note, Panel, PanelBar, StatCells, Title } from './ui';
 
 /**
  * Screen 3 — the answer.
@@ -184,6 +185,9 @@ function ResultsBody({ estimate }: { estimate: EstimateView }) {
         />
       </div>
 
+      {/* ------------------------------------------------------- buy it -- */}
+      <BuyThese estimate={estimate} />
+
       <div className="mt-[18px] flex flex-wrap items-start gap-[20px]">
         {/* --------------------------------------------------- narration -- */}
         <Panel className="min-w-0 flex-[2_1_420px] p-[16px]">
@@ -278,5 +282,61 @@ function ResultsBody({ estimate }: { estimate: EstimateView }) {
         </Button>
       </div>
     </>
+  );
+}
+
+/**
+ * THE PIVOT — build plan item 8.
+ *
+ * `bella.md` §3: the estimator ends in the cart, and the WhatsApp and PDF exits
+ * stay. So this sits directly under the table, where somebody has just finished
+ * reading what their repair needs, and the exits column below is left exactly as
+ * the canvas drew it. Position carries the hierarchy rather than a second orange
+ * competing with the WhatsApp button in the rail.
+ *
+ * It counts before it sells. The button does not say "add to cart" and it never
+ * implies the whole estimate is buyable — the honest number goes in the heading,
+ * and the screen behind it is where the difference is worked through.
+ */
+function BuyThese({ estimate }: { estimate: EstimateView }) {
+  const { vehicle } = useEstimateFlow();
+  const buyable = estimate.items.filter(
+    (item) => offersForPart(item.mpn, item.partName, vehicle).length > 0,
+  ).length;
+  const all = estimate.items.length;
+
+  if (buyable === 0) {
+    return (
+      <Note tone="dashed" className="mt-[18px]">
+        <strong className="font-bold">We cannot sell you any of these yet.</strong> Every part above
+        fits your car and none of them has a priced offer in our catalogue. The numbers are still
+        real — take them to a workshop, or send them to yourself with the buttons below.
+      </Note>
+    );
+  }
+
+  return (
+    <Panel weight="heavy" tone="soft" className="mt-[18px]">
+      <PanelBar tone="flag" weight="heavy" right={`${buyable} of ${all}`}>
+        Buy them from us
+      </PanelBar>
+      <div className="flex flex-wrap items-center gap-x-[20px] gap-y-[13px] px-[16px] py-[15px]">
+        <div className="min-w-0 flex-[1_1_340px]">
+          <Title className="text-[18px]">
+            {buyable === all
+              ? `We stock all ${all} of these`
+              : `We can sell you ${buyable} of these ${all}`}
+          </Title>
+          <p className="text-ink-soft mt-[8px] max-w-[58ch] text-[13px] leading-[1.55]">
+            {buyable === all
+              ? 'One all-in Naira price each, duty included, delivered or collected. Your estimate is a range because both aftermarket and genuine exist for some of these — the next screen lets you pick.'
+              : `The other ${all - buyable} we can name and number but hold no priced offer for. They are listed on the next screen and they will not go quietly into your basket.`}
+          </p>
+        </div>
+        <Button variant="primary" size="lg" href="/estimate/buy" className="flex-none">
+          See what we can supply
+        </Button>
+      </div>
+    </Panel>
   );
 }

@@ -747,6 +747,47 @@ export function listingBySlug(
   };
 }
 
+/**
+ * EVERY OFFER WE HOLD FOR ONE PART THE ESTIMATOR NAMED — build plan item 8.
+ *
+ * The estimator and the store were transcribed from the same canvas and so name
+ * the same parts, but they are not the same list and must not be assumed to be:
+ * the estimator prices a zone, the store sells a listing, and the join between
+ * them is the part number. Numbers are compared with punctuation stripped, for
+ * the reason `matchesQuery` gives — nobody reads a hyphen off a casting, and a
+ * dealer's terminal prints them inconsistently.
+ *
+ * Falling back to the name is deliberate and narrow. Five of the estimator's
+ * rows carry a null MPN because the canvas never gave one, and matching those
+ * on an exact name is the only join available; it is exact rather than fuzzy
+ * because a near-miss here would put the wrong part in somebody's basket, which
+ * is worse than not finding it at all.
+ *
+ * An empty array is a real and common answer. It means we can name the part and
+ * cannot sell it, which is the coverage gap the estimator already shows — and
+ * the one thing "add to cart" must never paper over.
+ */
+export function offersForPart(
+  mpn: string | null,
+  partName: string,
+  vehicle: VehicleDetail | null,
+): ListingDetailView[] {
+  const loose = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const wantedNumber = mpn === null ? null : loose(mpn);
+  const wantedName = partName.trim().toLowerCase();
+
+  const part = CATALOGUE.find((candidate) =>
+    wantedNumber !== null && candidate.mpn !== null
+      ? loose(candidate.mpn) === wantedNumber
+      : candidate.name.toLowerCase() === wantedName,
+  );
+  if (!part) return [];
+
+  return LISTINGS.filter((listing) => listing.part.slug === part.slug)
+    .map((listing) => listingBySlug(listing.summary.slug, vehicle))
+    .filter((listing): listing is ListingDetailView => listing !== null);
+}
+
 /** Every slug the store can render, for `generateStaticParams`. */
 export function allListingSlugs(): string[] {
   return LISTINGS.map((listing) => listing.summary.slug);
