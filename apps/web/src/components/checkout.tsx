@@ -567,6 +567,10 @@ function OrderSummary({
         <Link href="/cart" className="underline">
           Back to the basket
         </Link>
+        {' · '}
+        <Link href="/orders" className="underline">
+          Track an order
+        </Link>
       </p>
     </div>
   );

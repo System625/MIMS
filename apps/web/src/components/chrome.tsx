@@ -168,8 +168,9 @@ export function PageHeading({
 }
 
 /**
- * The persistent footer. Deliberately plain type, and it always carries the two
- * links that make the numbers arguable: how we price, and what we hold.
+ * The persistent footer. Deliberately plain type, and it always carries the
+ * links that make the numbers arguable — how we price, and what we hold — plus
+ * the way back into an order that has already been paid for.
  */
 export function SiteFooter() {
   return (
@@ -178,6 +179,15 @@ export function SiteFooter() {
         <Kicker as="span" className="text-muted tracking-[0.09em]">
           MIMS TECHNOLOGIES LTD · LAGOS
         </Kicker>
+        <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
+        {/* A customer who has prepaid and gone quiet-eyed looks in the footer
+            before they look anywhere else. It is on every page for that reason. */}
+        <Link
+          href="/orders"
+          className="text-muted font-mono text-[11px] font-bold uppercase leading-none tracking-[0.09em] underline"
+        >
+          Track an order
+        </Link>
         <span className="text-muted-2 font-mono text-[11px] font-bold">·</span>
         <Link
           href="/how-we-price"

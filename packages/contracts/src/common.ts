@@ -99,14 +99,24 @@ export const leadTimeSchema = z.object({
 export type LeadTime = z.infer<typeof leadTimeSchema>;
 
 /**
- * Nigerian mobile number, as typed: `0803…`, `+234803…` or `234803…`. Phone is
- * the identity at checkout, so this is validated rather than trusted, and
+ * Nigerian mobile number, AS TYPED: `0803…`, `+234803…` or `234803…`, with or
+ * without the spaces and dashes people actually put in them. Phone is the
+ * identity at checkout, so this is validated rather than trusted, and
  * normalised to a single form in the service layer.
+ *
+ * The separators are not a nicety. Nobody writes their own number as eleven
+ * unbroken digits — every Nigerian number is spoken and written in groups —
+ * and this schema's own error message offers `0803 123 4567` as the example to
+ * follow. A rule that rejects the format it recommends fails the one customer
+ * who did exactly as asked, at the field that IS the account.
  */
 export const nigerianPhoneSchema = z
   .string()
   .trim()
-  .regex(/^(?:\+?234|0)[789]\d{9}$/, 'Enter a Nigerian mobile number, e.g. 0803 123 4567');
+  .regex(
+    /^(?:\+?234[\s-]?|0)[789](?:[\s-]?\d){9}$/,
+    'Enter a Nigerian mobile number, e.g. 0803 123 4567',
+  );
 
 export const healthSchema = z.object({
   status: z.enum(['ok', 'degraded']),
